@@ -1,0 +1,67 @@
+# ============================================================================
+# CONVOCATORIA - Recibida desde MS PERSONAL (snapshot + requerimiento_personal_id)
+# ============================================================================
+
+enum TipoRequerimientoConvocatoria {
+  obra
+  staff
+}
+
+enum EstadoConvocatoria {
+  ACTIVA
+  EN_PROCESO
+  FINALIZADA
+  CANCELADA
+}
+
+type Convocatoria {
+  id: ID!
+  requerimiento_personal_id: String!
+  codigo_convocatoria: String!
+  tipo_requerimiento: TipoRequerimientoConvocatoria!
+  estado_convocatoria: EstadoConvocatoria!
+  cargo_nombre: String
+  categoria_nombre: String
+  especialidad_nombre: String
+  obra_nombre: String
+  empresa_nombre: String
+  vacantes: Int!
+  prioridad: String!
+  requisitos: JSON
+  cargo_categoria_especialidad_id: String
+  obra_id: String
+  empresa_id: String
+  detalle_staff_snapshot: JSON
+  link_formulario: String
+  token_formulario: String
+  fecha_creacion: DateTime!
+  fecha_actualizacion: DateTime!
+}
+
+input RecibirConvocatoriaInput {
+  requerimiento_personal_id: String!
+  codigo_convocatoria: String!
+  tipo_requerimiento: TipoRequerimientoConvocatoria!
+  cargo_nombre: String
+  categoria_nombre: String
+  especialidad_nombre: String
+  obra_nombre: String
+  empresa_nombre: String
+  vacantes: Int!
+  prioridad: String!
+  requisitos: JSON
+  cargo_categoria_especialidad_id: String
+  obra_id: String
+  empresa_id: String
+  detalle_staff_snapshot: JSON
+}
+
+extend type Query {
+  convocatoria(id: ID!): Convocatoria
+  convocatoriaPorRequerimientoPersonalId(requerimientoPersonalId: String!): Convocatoria
+  convocatorias(limit: Int, offset: Int): [Convocatoria!]!
+}
+
+extend type Mutation {
+  recibirConvocatoria(input: RecibirConvocatoriaInput!): Convocatoria!
+}

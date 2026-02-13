@@ -1,0 +1,168 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - ENTREVISTA LLAMADA
+# ============================================================================
+
+type EntrevistaLlamada {
+  id: ID!
+  aplicacionCandidatoId: ID!
+
+  # Información de la entrevista
+  fecha_entrevista: DateTime!
+
+  # Disponibilidad
+  disponibilidad_actual: String!
+  residencia_actual: String!
+  disponibilidad_viajar: DisponibilidadViajar!
+
+  # Información personal
+  estudios: String!
+  estado_civil: EstadoCivil!
+  hijos: Int!
+  edad: Int!
+
+  # Experiencia
+  experiencia_general: String!
+  experiencia_rubro: ExperienciaRubro!
+
+  # Objetivos profesionales
+  busca_estabilidad: String!
+  retos_profesionales: String!
+
+  # Evaluación (1-10)
+  desenvolvimiento: Int!
+  interes_puesto: Int!
+
+  # Conocimiento del perfil
+  conocimiento_perfil: String!
+
+  # Pretensiones salariales
+  pretension_monto: Float!
+  pretension_negociable: String!
+
+  # Información del entrevistador
+  comentarios: String!
+  solicitar_referencias: String!
+  entrevistador_id: ID!
+  entrevistador_nombre: String!
+
+  # Resultado
+  observaciones: String!
+  resultado: String!
+
+  # Metadata
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+# Enums
+enum DisponibilidadViajar {
+  SI
+  NO
+}
+
+enum EstadoCivil {
+  SOLTERO
+  CASADO
+  DIVORCIADO
+  VIUDO
+  CONVIVIENTE
+}
+
+enum ExperienciaRubro {
+  BAJO
+  MEDIO
+  ALTO
+}
+
+# Inputs para operaciones
+input CrearEntrevistaInput {
+  aplicacionCandidatoId: ID!
+  fecha_entrevista: DateTime!
+  disponibilidad_actual: String!
+  residencia_actual: String!
+  disponibilidad_viajar: DisponibilidadViajar!
+  estudios: String!
+  estado_civil: EstadoCivil!
+  hijos: Int!
+  edad: Int!
+  experiencia_general: String!
+  experiencia_rubro: ExperienciaRubro!
+  busca_estabilidad: String!
+  retos_profesionales: String!
+  desenvolvimiento: Int!
+  conocimiento_perfil: String!
+  interes_puesto: Int!
+  pretension_monto: Float!
+  pretension_negociable: String!
+  comentarios: String!
+  solicitar_referencias: String!
+  entrevistador_id: ID!
+  entrevistador_nombre: String!
+  observaciones: String!
+  resultado: String!
+}
+
+input ActualizarEntrevistaInput {
+  fecha_entrevista: DateTime
+  disponibilidad_actual: String
+  residencia_actual: String
+  disponibilidad_viajar: DisponibilidadViajar
+  estudios: String
+  estado_civil: EstadoCivil
+  hijos: Int
+  edad: Int
+  experiencia_general: String
+  experiencia_rubro: ExperienciaRubro
+  busca_estabilidad: String
+  retos_profesionales: String
+  desenvolvimiento: Int
+  conocimiento_perfil: String
+  interes_puesto: Int
+  pretension_monto: Float
+  pretension_negociable: String
+  comentarios: String
+  solicitar_referencias: String
+  entrevistador_id: ID
+  entrevistador_nombre: String
+  observaciones: String
+  resultado: String
+}
+
+input EntrevistaFiltrosInput {
+  aplicacionCandidatoId: ID
+  entrevistador_id: ID
+  fechaDesde: DateTime
+  fechaHasta: DateTime
+  limit: Int
+  offset: Int
+}
+
+# Queries
+type Query {
+  # Obtener entrevista por ID
+  obtenerEntrevista(id: ID!): EntrevistaLlamada
+
+  # Obtener entrevista por aplicación candidata
+  obtenerEntrevistaPorAplicacionCandidato(aplicacionCandidatoId: ID!): EntrevistaLlamada
+
+  # Listar entrevistas con filtros
+  listarEntrevistas(filtros: EntrevistaFiltrosInput): [EntrevistaLlamada!]!
+
+  # Contar entrevistas con filtros
+  contarEntrevistas(filtros: EntrevistaFiltrosInput): Int!
+
+  # Verificar si existe entrevista para aplicación candidata
+  existeEntrevistaParaAplicacionCandidato(aplicacionCandidatoId: ID!): Boolean!
+}
+
+# Mutations
+type Mutation {
+  # Crear nueva entrevista
+  crearEntrevista(input: CrearEntrevistaInput!): EntrevistaLlamada!
+
+  # Actualizar entrevista existente
+  actualizarEntrevista(id: ID!, input: ActualizarEntrevistaInput!): EntrevistaLlamada!
+
+  # Eliminar entrevista
+  eliminarEntrevista(id: ID!): Boolean!
+}

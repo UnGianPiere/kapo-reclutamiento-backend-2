@@ -1,0 +1,200 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - APLICACION CANDIDATO
+# ============================================================================
+
+# Tipos relacionados (para evitar duplicación)
+type Candidato {
+  id: ID!
+  dni: String!
+  nombres: String!
+  apellidoPaterno: String!
+  apellidoMaterno: String!
+  correo: String!
+  telefono: String!
+  lugarResidencia: String
+  curriculumUrl: String!
+  fechaRegistro: DateTime!
+  fechaActualizacion: DateTime!
+}
+
+type Convocatoria {
+  id: ID!
+  codigoConvocatoria: String!
+  cargoNombre: String
+  obraNombre: String
+  empresaNombre: String
+  vacantes: Int!
+  prioridad: String!
+  estadoConvocatoria: String!
+  fechaInicio: DateTime!
+}
+
+type AplicacionCandidato {
+  id: ID!
+  candidatoId: ID!
+  convocatoriaId: ID!
+
+  # Relaciones resueltas por GraphQL
+  candidato: Candidato
+  convocatoria: Convocatoria
+
+  # Respuestas del formulario dinámico
+  respuestasFormulario: JSON!
+
+  # Estado en el kanban
+  estadoKanban: EstadoKanban!
+
+  # Información específica
+  aniosExperienciaPuesto: Int!
+  aniosExperienciaGeneral: Int
+  medioConvocatoria: String
+  pretensionEconomica: Float!
+  curriculumUrl: String!
+
+  # Metadata
+  fechaAplicacion: DateTime!
+  aplicadoPor: String!
+
+  # Sistema de posibles candidatos
+  ordenPrioridad: Int
+  fechaExpiracionPosibles: DateTime
+
+  # Detección de duplicados
+  posibleDuplicado: Boolean!
+  candidatoSimilarId: ID
+  similitudPorcentaje: Float
+  duplicadoRevisado: Boolean!
+
+  # Tracking de reactivaciones
+  esRepostulacion: Boolean!
+  esPosibleCandidatoActivado: Boolean!
+  aplicacionPrincipalRechazadaId: ID
+}
+
+enum EstadoKanban {
+  CVS_RECIBIDOS
+  POR_LLAMAR
+  ENTREVISTA_PREVIA
+  PROGRAMAR_1RA_ENTREVISTA
+  PROGRAMAR_2DA_ENTREVISTA
+  REFERENCIAS
+  EVALUACION_ANTISOBORNO
+  APROBACION_GERENCIA
+  LLAMAR_COMUNICAR_ENTRADA
+  FINALIZADA
+  RECHAZADO_POR_CANDIDATO
+  DESCARTADO
+  POSIBLES_CANDIDATOS
+}
+
+input CamposEspecificosInput {
+  aniosExperienciaPuesto: Int!
+  aniosExperienciaGeneral: Int
+  medioConvocatoria: String
+  pretensionEconomica: Float!
+  curriculumUrl: String!
+}
+
+input CrearAplicacionCompletaInput {
+  convocatoriaId: ID!
+  candidatoData: CandidatoInput!
+  respuestasFormulario: JSON! # Campos dinámicos
+  camposEspecificos: CamposEspecificosInput! # Campos directos
+  aplicadoPor: String
+}
+
+input CandidatoInput {
+  dni: String!
+  nombres: String!
+  apellidoPaterno: String!
+  apellidoMaterno: String!
+  correo: String!
+  telefono: String!
+  lugarResidencia: String
+  curriculumUrl: String!
+}
+
+input ActualizarAplicacionInput {
+  puestoPostula: String
+  aniosExperienciaPuesto: Int
+  aniosExperienciaGeneral: Int
+  medioConvocatoria: String
+  pretensionEconomica: Float
+  curriculumUrl: String
+  respuestasFormulario: JSON
+  estadoKanban: EstadoKanban
+  ordenPrioridad: Int
+  fechaExpiracionPosibles: DateTime
+  posibleDuplicado: Boolean
+  candidatoSimilarId: ID
+  similitudPorcentaje: Float
+  duplicadoRevisado: Boolean
+  esRepostulacion: Boolean
+  esPosibleCandidatoActivado: Boolean
+  aplicacionPrincipalRechazadaId: ID
+}
+
+# Queries
+type Query {
+  obtenerAplicacion(id: ID!): AplicacionCandidato
+  listarAplicaciones(
+    estadoKanban: EstadoKanban
+    candidatoId: ID
+    convocatoriaId: ID
+    ordenPrioridad: Int
+    aplicadoPor: String
+    fechaDesde: DateTime
+    fechaHasta: DateTime
+    posibleDuplicado: Boolean
+    duplicadoRevisado: Boolean
+    limit: Int
+    offset: Int
+  ): AplicacionCandidatoConnection!
+  obtenerAplicacionesPorCandidato(candidatoId: ID!): [AplicacionCandidato!]!
+  obtenerAplicacionesPorConvocatoria(convocatoriaId: ID!): [AplicacionCandidato!]!
+  obtenerEstadisticasConvocatoria(convocatoriaId: ID!): EstadisticasConvocatoria!
+  getKanbanData(convocatoriaId: ID): KanbanData!
+}
+
+type AplicacionCandidatoConnection {
+  aplicaciones: [AplicacionCandidato!]!
+  total: Int!
+}
+
+type EstadisticasConvocatoria {
+  total: Int!
+  porEstadoKanban: JSON!
+  porPosiblesCandidatos: Int!
+  duplicadosPendientes: Int!
+}
+
+# Tipos para Kanban
+type KanbanColumnData {
+  aplicaciones: [AplicacionCandidato!]!
+  total: Int!
+  hasNextPage: Boolean!
+}
+
+type KanbanData {
+  CVS_RECIBIDOS: KanbanColumnData!
+  POR_LLAMAR: KanbanColumnData!
+  ENTREVISTA_PREVIA: KanbanColumnData!
+  PROGRAMAR_1RA_ENTREVISTA: KanbanColumnData!
+  PROGRAMAR_2DA_ENTREVISTA: KanbanColumnData!
+  REFERENCIAS: KanbanColumnData!
+  EVALUACION_ANTISOBORNO: KanbanColumnData!
+  APROBACION_GERENCIA: KanbanColumnData!
+  LLAMAR_COMUNICAR_ENTRADA: KanbanColumnData!
+  FINALIZADA: KanbanColumnData!
+  RECHAZADO_POR_CANDIDATO: KanbanColumnData!
+  DESCARTADO: KanbanColumnData!
+  POSIBLES_CANDIDATOS: KanbanColumnData!
+}
+
+# Mutations
+type Mutation {
+  crearAplicacion(input: CrearAplicacionCompletaInput!): AplicacionCandidato!
+  actualizarAplicacion(id: ID!, input: ActualizarAplicacionInput!): AplicacionCandidato!
+  cambiarEstadoKanban(id: ID!, estadoKanban: EstadoKanban!): AplicacionCandidato!
+  eliminarAplicacion(id: ID!): Boolean!
+}

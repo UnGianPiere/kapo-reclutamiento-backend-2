@@ -1,0 +1,71 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - CANDIDATO
+# ============================================================================
+
+type Candidato {
+  id: ID!
+  # Datos personales obligatorios
+  dni: String!
+  nombres: String!
+  apellidoPaterno: String!
+  apellidoMaterno: String!
+  correo: String!
+  telefono: String!
+
+  # Información opcional
+  lugarResidencia: String
+
+  # Documentos
+  curriculumUrl: String!
+
+  # Metadata
+  totalAplicaciones: Int!
+  fechaRegistro: DateTime!
+  fechaActualizacion: DateTime!
+
+  # Auditoría de cambios
+  correosHistoricos: [String!]!
+  telefonosHistoricos: [String!]!
+}
+
+input CandidatoInput {
+  dni: String!
+  nombres: String!
+  apellidoPaterno: String!
+  apellidoMaterno: String!
+  correo: String!
+  telefono: String!
+  lugarResidencia: String
+  curriculumUrl: String!
+}
+
+# Queries
+type Query {
+  obtenerCandidato(id: ID!): Candidato
+  buscarCandidatoPorDNI(dni: String!): Candidato
+  buscarCandidatoPorCorreo(correo: String!): Candidato
+  listarCandidatos(
+    dni: String
+    nombres: String
+    correo: String
+    telefono: String
+    fechaRegistroDesde: DateTime
+    fechaRegistroHasta: DateTime
+    limit: Int
+    offset: Int
+  ): CandidatoConnection!
+  obtenerCandidatosDuplicados: [Candidato!]!
+}
+
+type CandidatoConnection {
+  candidatos: [Candidato!]!
+  total: Int!
+}
+
+# Mutations
+type Mutation {
+  crearCandidato(input: CandidatoInput!): Candidato!
+  actualizarCandidato(id: ID!, input: CandidatoInput!): Candidato!
+  eliminarCandidato(id: ID!): Boolean!
+  fusionarCandidatos(candidatoPrincipalId: ID!, candidatoDuplicadoId: ID!): Candidato!
+}

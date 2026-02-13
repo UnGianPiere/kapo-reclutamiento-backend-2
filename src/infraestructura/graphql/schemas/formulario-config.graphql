@@ -1,0 +1,148 @@
+# ============================================================================
+# FORMULARIO CONFIG - Configuración personalizable de formularios
+# ============================================================================
+
+enum TipoCampoFormulario {
+  text
+  email
+  tel
+  number
+  textarea
+  select
+  url
+  file
+  checkbox
+}
+
+enum EstadoFormularioConfig {
+  ACTIVO
+  INACTIVO
+}
+
+type CampoFormulario {
+  id: ID!
+  nombre: String!
+  etiqueta: String!
+  tipo: TipoCampoFormulario!
+  requerido: Boolean!
+  habilitado: Boolean!
+  orden: Int!
+  opciones: [String!]
+  placeholder: String
+  validaciones: CampoValidaciones
+}
+
+type CampoValidaciones {
+  min: Int
+  max: Int
+  patron: String
+  maxSize: Int
+  maxFiles: Int
+  maxLength: Int
+  allowedTypes: [String!]
+}
+
+type FormularioConfig {
+  id: ID!
+  convocatoriaId: ID!
+  titulo: String!
+  descripcion: String
+  campos: [CampoFormulario!]!
+  estado: EstadoFormularioConfig!
+
+  # Link público y autenticación
+  urlPublico: String
+  tokenJwt: String
+
+  # Fechas de vigencia automática
+  fechaPublicacion: DateTime
+  fechaExpiracion: DateTime
+
+  creadoPor: ID!
+  fechaCreacion: DateTime!
+  fechaModificacion: DateTime!
+  version: Int!
+}
+
+# Inputs
+input CampoFormularioInput {
+  id: ID
+  nombre: String!
+  etiqueta: String!
+  tipo: TipoCampoFormulario!
+  requerido: Boolean
+  habilitado: Boolean
+  orden: Int!
+  opciones: [String!]
+  placeholder: String
+  validaciones: CampoValidacionesInput
+}
+
+input CampoValidacionesInput {
+  min: Int
+  max: Int
+  patron: String
+  maxSize: Int
+  maxFiles: Int
+  maxLength: Int
+  allowedTypes: [String!]
+}
+
+input CrearFormularioConfigInput {
+  convocatoriaId: ID!
+  titulo: String
+  descripcion: String
+  campos: [CampoFormularioInput!]
+  estado: EstadoFormularioConfig
+  urlPublico: String
+  tokenJwt: String
+  fechaPublicacion: DateTime
+  fechaExpiracion: DateTime
+  creadoPor: ID
+}
+
+input ActualizarFormularioConfigInput {
+  titulo: String
+  descripcion: String
+  campos: [CampoFormularioInput!]
+  estado: EstadoFormularioConfig
+  urlPublico: String
+  tokenJwt: String
+  fechaPublicacion: DateTime
+  fechaExpiracion: DateTime
+}
+
+input CampoOrdenInput {
+  campoId: ID!
+  orden: Int!
+}
+
+# Queries
+type Query {
+  formularioConfigPorConvocatoria(convocatoriaId: ID!): FormularioConfig
+  formularioConfigPorId(id: ID!): FormularioConfig
+  listarFormulariosConfig(
+    estado: EstadoFormularioConfig
+    creadoPor: ID
+    limit: Int
+    offset: Int
+  ): FormularioConfigList!
+}
+
+type FormularioConfigList {
+  configuraciones: [FormularioConfig!]!
+  total: Int!
+}
+
+# Mutations
+type Mutation {
+  crearFormularioConfig(input: CrearFormularioConfigInput!): FormularioConfig!
+  actualizarFormularioConfig(id: ID!, input: ActualizarFormularioConfigInput!): FormularioConfig!
+  activarFormularioConfig(id: ID!): FormularioConfig!
+  desactivarFormularioConfig(id: ID!): FormularioConfig!
+  agregarCampoFormulario(id: ID!, campo: CampoFormularioInput!): FormularioConfig!
+  actualizarCampoFormulario(id: ID!, campoId: ID!, campo: CampoFormularioInput!): FormularioConfig!
+  eliminarCampoFormulario(id: ID!, campoId: ID!): FormularioConfig!
+  reordenarCamposFormulario(id: ID!, ordenes: [CampoOrdenInput!]!): FormularioConfig!
+  eliminarFormularioConfig(id: ID!): Boolean!
+}

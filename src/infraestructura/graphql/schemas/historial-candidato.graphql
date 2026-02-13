@@ -1,0 +1,148 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - HISTORIAL CANDIDATO
+# ============================================================================
+
+"""
+Registro de todos los movimientos y cambios de estado de un candidato
+"""
+type HistorialCandidato {
+  id: ID!
+
+  # Referencias
+  candidatoId: ID!           # Referencia al candidato
+  aplicacionId: ID!          # Referencia a la aplicación
+
+  # Información del cambio
+  estadoAnterior: EstadoKanban!    # Estado antes del cambio
+  estadoNuevo: EstadoKanban!       # Estado después del cambio
+  tipoCambio: TipoCambioHistorial! # Tipo de cambio realizado
+
+  # Quién y cuándo
+  realizadoPor: ID!          # Usuario que hizo el cambio
+  realizadoPorNombre: String!    # Nombre para queries rápidas
+  fechaCambio: DateTime!         # Timestamp del cambio
+
+  # Motivos y comentarios (opcionales)
+  motivo: String               # Razón del cambio
+  comentarios: String          # Comentarios adicionales
+
+  # Metadata adicional
+  tiempoEnEstadoAnterior: Int   # Días en el estado anterior
+  etapaProceso: String          # Fase del proceso
+
+  # Timestamps
+  created_at: DateTime!
+}
+
+"""
+Tipo de cambio realizado en el historial
+"""
+enum TipoCambioHistorial {
+  APROBACION
+  RECHAZO
+  MOVIMIENTO
+  REACTIVACION
+}
+
+"""
+Input para crear nueva entrada en el historial
+"""
+input CrearHistorialInput {
+  candidatoId: ID!
+  aplicacionId: ID!
+  estadoAnterior: EstadoKanban!
+  estadoNuevo: EstadoKanban!
+  tipoCambio: TipoCambioHistorial!
+  realizadoPor: ID!
+  realizadoPorNombre: String!
+  fechaCambio: DateTime
+  motivo: String
+  comentarios: String
+  tiempoEnEstadoAnterior: Int
+  etapaProceso: String
+}
+
+"""
+Filtros para consultas del historial
+"""
+input HistorialFiltrosInput {
+  candidatoId: ID
+  aplicacionId: ID
+  realizadoPor: ID
+  tipoCambio: TipoCambioHistorial
+  estadoNuevo: EstadoKanban
+  fechaDesde: DateTime
+  fechaHasta: DateTime
+  limit: Int
+  offset: Int
+}
+
+"""
+Resultado de lista con paginación
+"""
+type HistorialListado {
+  historial: [HistorialCandidato!]!
+  total: Int!
+}
+
+"""
+Estadísticas de conversión del proceso de reclutamiento
+"""
+type EstadisticasConversion {
+  totalMovimientos: Int!
+  porTipoCambio: JSON!
+  porEstadoDestino: JSON!
+  tiempoPromedioPorEstado: JSON!
+  tasaConversionPorEtapa: JSON!
+}
+
+# ============================================================================
+# QUERIES
+# ============================================================================
+
+extend type Query {
+  """
+  Obtener historial completo de una aplicación
+  """
+  obtenerHistorialAplicacion(aplicacionId: ID!): [HistorialCandidato!]!
+
+  """
+  Obtener historial de un candidato
+  """
+  obtenerHistorialCandidato(candidatoId: ID!): [HistorialCandidato!]!
+
+  """
+  Listar historial con filtros avanzados
+  """
+  listarHistorial(filtros: HistorialFiltrosInput): HistorialListado!
+
+  """
+  Obtener último cambio de estado para una aplicación
+  """
+  obtenerUltimoCambioEstado(aplicacionId: ID!): HistorialCandidato
+
+  """
+  Generar estadísticas de conversión del proceso
+  """
+  generarEstadisticasConversion(
+    convocatoriaId: ID
+    fechaDesde: DateTime
+    fechaHasta: DateTime
+  ): EstadisticasConversion!
+}
+
+# ============================================================================
+# MUTATIONS
+# ============================================================================
+
+extend type Mutation {
+  """
+  Registrar un nuevo cambio en el historial
+  """
+  registrarCambioHistorial(input: CrearHistorialInput!): HistorialCandidato!
+
+  """
+  Limpiar historial antiguo (solo para administradores)
+  """
+  limpiarHistorico(fechaLimite: DateTime!): Int!
+}
