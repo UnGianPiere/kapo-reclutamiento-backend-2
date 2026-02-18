@@ -53,6 +53,7 @@ type AplicacionCandidato {
 
   # Metadata
   fechaAplicacion: DateTime!
+  updatedAt: DateTime!
   aplicadoPor: String!
 
   # Sistema de posibles candidatos

@@ -3,6 +3,7 @@ import { UsuarioService } from '../../../aplicacion/servicios/UsuarioService';
 import { UsuarioInput, UsuarioResponse } from '../../../dominio/entidades/Usuario';
 import { BaseResolver } from './BaseResolver';
 import { ErrorHandler } from './ErrorHandler';
+import { PaginationInput, FilterInput } from '../../../dominio/valueObjects/Pagination';
 
 /**
  * Resolver de usuarios que extiende BaseResolver para mantener consistencia
@@ -43,6 +44,14 @@ export class UsuarioResolver extends BaseResolver<UsuarioResponse> {
           return await ErrorHandler.handleError(
             async () => await this.usuarioService.getUsuariosByRegistrosGeneralesContables(),
             'getUsuariosByRegistrosGeneralesContables'
+          );
+        },
+        listUsuariosPaginated: async (_: unknown, args: { pagination: PaginationInput; filters?: FilterInput }) => {
+          const { pagination, filters } = args;
+          return await ErrorHandler.handleError(
+            async () => await this.usuarioService.listUsuariosPaginatedWithFilters(pagination, filters),
+            'listUsuariosPaginated',
+            { pagination, filters }
           );
         }
       },

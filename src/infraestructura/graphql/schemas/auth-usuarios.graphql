@@ -52,6 +52,14 @@ input PermissionInput {
 # TIPOS DE USUARIO
 # ============================================================================
 
+type Obra {
+  id: ID!
+  titulo: String
+  nombre: String
+  descripcion: String
+  ubicacion: String
+}
+
 type Usuario {
   id: ID!
   nombres: String
@@ -60,6 +68,8 @@ type Usuario {
   dni: String
   cargo_id: Cargo
   rol_id: String
+  empresa_id: [Empresa]
+  obra_id: [Obra]
   telefono: String
   firma: String
   foto_perfil: String
@@ -87,6 +97,18 @@ type Cargo {
   gerarquia: Int
 }
 
+type PaginatedUsuarioResponse {
+  data: [Usuario]!
+  pagination: PaginationInfo!
+}
+
+input UsuarioFilterInput {
+  dni: String
+  _id: String
+  nombres: String
+  apellidos: String
+}
+
 # ============================================================================
 # TIPOS DE EMPRESA
 # ============================================================================
@@ -101,6 +123,14 @@ type Empresa {
   ruc: String
   imagenes: [String]
   color: String
+}
+
+type Obra {
+  id: ID!
+  titulo: String
+  nombre: String
+  descripcion: String
+  ubicacion: String
 }
 
 type DeleteResponse {
@@ -133,6 +163,7 @@ extend type Query {
   getAllUsuarios: [Usuario]
   usuariosCargo: [Usuario]
   getUsuariosByRegistrosGeneralesContables: [Usuario]
+  listUsuariosPaginated(pagination: PaginationInput!, filters: UsuarioFilterInput): PaginatedUsuarioResponse
   
   # Empresa
   listEmpresas: [Empresa!]!

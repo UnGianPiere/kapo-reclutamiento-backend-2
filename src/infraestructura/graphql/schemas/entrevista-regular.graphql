@@ -1,0 +1,96 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - ENTREVISTA REGULAR
+# ============================================================================
+
+type EntrevistaRegular {
+  id: ID!
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  tipo_entrevista: TipoEntrevista!
+  fecha_entrevista: DateTime!
+  hora_entrevista: String!
+  correo_contacto: String!
+  entrevistador_id: ID!
+  entrevistador_nombre: String!
+  observaciones: String
+  resultado: String
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+# Enums
+enum TipoEntrevista {
+  PRIMERA
+  SEGUNDA
+}
+
+# Inputs para operaciones
+input CrearEntrevistaRegularInput {
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  tipo_entrevista: TipoEntrevista!
+  fecha_entrevista: DateTime!
+  hora_entrevista: String!
+  correo_contacto: String!
+  entrevistador_id: ID!
+  entrevistador_nombre: String!
+  observaciones: String
+  resultado: String
+}
+
+input ActualizarEntrevistaRegularInput {
+  fecha_entrevista: DateTime
+  hora_entrevista: String
+  correo_contacto: String
+  entrevistador_id: ID
+  entrevistador_nombre: String
+  observaciones: String
+  resultado: String
+}
+
+input EntrevistaRegularFiltrosInput {
+  aplicacionCandidatoId: ID
+  candidatoId: ID
+  tipo_entrevista: TipoEntrevista
+  entrevistador_id: ID
+  fechaDesde: DateTime
+  fechaHasta: DateTime
+  limit: Int
+  offset: Int
+}
+
+# Queries
+type Query {
+  # Obtener entrevista regular por ID
+  obtenerEntrevistaRegular(id: ID!): EntrevistaRegular
+
+  # Obtener entrevista regular por aplicación y tipo
+  obtenerEntrevistaRegularPorAplicacion(
+    aplicacionCandidatoId: ID!
+    tipo_entrevista: TipoEntrevista!
+  ): EntrevistaRegular
+
+  # Listar entrevistas regulares con filtros
+  listarEntrevistasRegulares(filtros: EntrevistaRegularFiltrosInput): [EntrevistaRegular!]!
+
+  # Contar entrevistas regulares con filtros
+  contarEntrevistasRegulares(filtros: EntrevistaRegularFiltrosInput): Int!
+
+  # Verificar si existe entrevista regular para aplicación y tipo
+  existeEntrevistaRegular(
+    aplicacionCandidatoId: ID!
+    tipo_entrevista: TipoEntrevista!
+  ): Boolean!
+}
+
+# Mutations
+type Mutation {
+  # Crear nueva entrevista regular
+  crearEntrevistaRegular(input: CrearEntrevistaRegularInput!): EntrevistaRegular!
+
+  # Actualizar entrevista regular existente
+  actualizarEntrevistaRegular(id: ID!, input: ActualizarEntrevistaRegularInput!): EntrevistaRegular!
+
+  # Eliminar entrevista regular
+  eliminarEntrevistaRegular(id: ID!): Boolean!
+}

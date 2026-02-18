@@ -168,13 +168,13 @@ const EntrevistaLlamadaSchema = new Schema<EntrevistaLlamadaDocument>({
   // Información del entrevistador
   comentarios: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     default: ''
   },
   solicitar_referencias: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     default: ''
   },
@@ -211,7 +211,7 @@ const EntrevistaLlamadaSchema = new Schema<EntrevistaLlamadaDocument>({
 });
 
 // Índices para búsquedas eficientes
-EntrevistaLlamadaSchema.index({ aplicacionCandidatoId: 1 }); // Ya tiene unique en el campo
+// aplicacionCandidatoId ya tiene índice único por unique: true
 EntrevistaLlamadaSchema.index({ entrevistador_id: 1 });
 EntrevistaLlamadaSchema.index({ fecha_entrevista: -1 });
 EntrevistaLlamadaSchema.index({ created_at: -1 });

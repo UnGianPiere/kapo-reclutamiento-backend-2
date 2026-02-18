@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { ValidationException } from '../../dominio/exceptions/DomainException';
+import { logger } from '../logging';
 
 /**
  * Servicio centralizado para gestionar configuración
@@ -39,9 +40,7 @@ export class ConfigService {
       'DATABASE_URL',
       'DATABASE_URL_LOCAL',
       'DATABASE_URL_DEV',
-      'GOOGLE_CLOUD_PROJECT_ID',
-      'GOOGLE_CLOUD_BUCKET',
-      'GOOGLE_CLOUD_KEY_FILE',
+      'GOOGLE_CLOUD_CREDENTIALS_JSON',
       'INACONS_BACKEND_URL',
       'PERSONAL_BACKEND_URL',
       'CORS_ORIGINS'
@@ -150,13 +149,42 @@ export class ConfigService {
   getGCPConfig(): {
     projectId: string;
     bucket: string;
-    keyFile: string;
   } {
-    return {
-      projectId: this.getOrDefault('GOOGLE_CLOUD_PROJECT_ID', 'primeval-aspect-448817-i2'),
-      bucket: this.getOrDefault('GOOGLE_CLOUD_BUCKET', 'primeval-aspect-448817-i2_cloudbuild'),
-      keyFile: this.getOrDefault('GOOGLE_CLOUD_KEY_FILE', './src/infraestructura/config/gcp-key.json')
-    };
+    const credentialsJson = this.get('GOOGLE_CLOUD_CREDENTIALS_JSON');
+    
+    if (!credentialsJson) {
+      logger.warn('⚠️ GOOGLE_CLOUD_CREDENTIALS_JSON no configurado - Upload de archivos deshabilitado');
+      // Retornar valores por defecto para que el servidor pueda iniciar
+      return {
+        projectId: 'default-project',
+        bucket: 'default-bucket'
+      };
+    }
+
+    try {
+      const credentials = JSON.parse(credentialsJson);
+      const projectId = credentials.project_id;
+      const bucket = `${projectId}_cloudbuild`; // Construir el nombre del bucket
+
+      if (!projectId) {
+        logger.warn('⚠️ project_id no encontrado en GOOGLE_CLOUD_CREDENTIALS_JSON - Upload de archivos deshabilitado');
+        return {
+          projectId: 'default-project',
+          bucket: 'default-bucket'
+        };
+      }
+
+      return {
+        projectId,
+        bucket
+      };
+    } catch (error) {
+      logger.warn('⚠️ GOOGLE_CLOUD_CREDENTIALS_JSON no es un JSON válido - Upload de archivos deshabilitado', { error: error instanceof Error ? error.message : String(error) });
+      return {
+        projectId: 'default-project',
+        bucket: 'default-bucket'
+      };
+    }
   }
 
   /**

@@ -97,17 +97,11 @@ export class UsuarioMongoRepository extends BaseMongoRepository<Usuario> impleme
    * Elimina un usuario
    */
   async deleteUsuario(id: string): Promise<UsuarioResponse> {
-    // Primero obtenemos el usuario antes de eliminarlo
     const usuario = await this.findById(id);
     if (!usuario) {
-      throw new Error(`Usuario con ID ${id} no encontrado`);
+      throw new Error('Usuario no encontrado');
     }
-
-    const deleted = await this.delete(id);
-    if (!deleted) {
-      throw new Error(`Error al eliminar usuario con ID ${id}`);
-    }
-
+    await this.delete(id);
     return this.mapToResponse(usuario);
   }
 

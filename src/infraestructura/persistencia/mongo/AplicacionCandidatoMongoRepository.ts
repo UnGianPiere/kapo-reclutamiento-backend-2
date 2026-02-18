@@ -253,13 +253,13 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
         }
       },
       // Ordenamiento inteligente:
-      // 1. Convocatorias más recientes primero (ID numérico descendente)
-      // 2. Dentro de cada convocatoria, aplicaciones más recientes primero
+      // 1. Aplicaciones más recientes primero (por fecha de aplicación)
+      // 2. Desempate por fecha de actualización
+      // 3. Desempate final por ID
       {
         $sort: {
-          "convocatoria_num": -1 as const,     // Convocatorias más recientes primero
-          "fechaAplicacion": -1 as const,      // Apps más recientes dentro de convocatoria
-          "_id": -1 as const                   // Desempate por ID
+          "updatedAt": -1 as 1 | -1,          // Desempate por actualización
+          "_id": -1 as 1 | -1                 // Desempate final por ID
         }
       },
       { $skip: offset },

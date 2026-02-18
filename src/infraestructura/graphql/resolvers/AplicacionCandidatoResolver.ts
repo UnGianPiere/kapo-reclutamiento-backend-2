@@ -35,7 +35,9 @@ export class AplicacionCandidatoResolver {
             console.error('Error resolviendo convocatoria:', error);
             return null;
           }
-        }
+        },
+        // Resolver para timestamp de actualización
+        updatedAt: (parent: any) => parent.updatedAt?.toISOString() || null
       },
 
       // Resolvers para campos de Candidato (mapeo snake_case -> camelCase)

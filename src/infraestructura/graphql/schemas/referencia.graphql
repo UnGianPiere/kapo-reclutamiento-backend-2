@@ -1,0 +1,73 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - REFERENCIA
+# ============================================================================
+
+type Referencia {
+  id: ID!
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  numero_telefono: String!
+  nombresyapellidos: String!
+  detalles: String
+  empresa: String
+  comentarios: String
+  archivosurl: [JSON]
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+# Inputs para operaciones
+input CrearReferenciaInput {
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  numero_telefono: String!
+  nombresyapellidos: String!
+  detalles: String
+  empresa: String
+  comentarios: String
+  archivosurl: [JSON]
+}
+
+input ActualizarReferenciaInput {
+  numero_telefono: String
+  nombresyapellidos: String
+  detalles: String
+  empresa: String
+  comentarios: String
+  archivosurl: [JSON]
+}
+
+input ReferenciaFiltrosInput {
+  aplicacionCandidatoId: ID
+  candidatoId: ID
+  empresa: String
+  limit: Int
+  offset: Int
+}
+
+# Queries
+type Query {
+  # Obtener referencia por ID
+  obtenerReferencia(id: ID!): Referencia
+
+  # Listar referencias con filtros
+  listarReferencias(filtros: ReferenciaFiltrosInput): [Referencia!]!
+
+  # Contar referencias con filtros
+  contarReferencias(filtros: ReferenciaFiltrosInput): Int!
+
+  # Listar referencias por aplicación candidata
+  listarReferenciasPorAplicacion(aplicacionCandidatoId: ID!): [Referencia!]!
+}
+
+# Mutations
+type Mutation {
+  # Crear nueva referencia
+  crearReferencia(input: CrearReferenciaInput!): Referencia!
+
+  # Actualizar referencia existente
+  actualizarReferencia(id: ID!, input: ActualizarReferenciaInput!): Referencia!
+
+  # Eliminar referencia
+  eliminarReferencia(id: ID!): Boolean!
+}

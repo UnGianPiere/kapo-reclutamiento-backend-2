@@ -2,6 +2,7 @@ import { UsuarioInput, UsuarioResponse } from '../../dominio/entidades/Usuario';
 import { IUsuarioRepository } from '../../dominio/repositorios/IUsuarioRepository';
 import { BaseService } from './BaseService';
 import { IBaseRepository } from '../../dominio/repositorios/IBaseRepository';
+import { PaginationInput, PaginationResult, FilterInput } from '../../dominio/valueObjects/Pagination';
 
 /**
  * Servicio de usuarios que extiende BaseService para mantener consistencia
@@ -42,6 +43,12 @@ export class UsuarioService extends BaseService<UsuarioResponse> {
 
   async deleteUsuario(id: string): Promise<UsuarioResponse> {
     return await this.usuarioRepository.deleteUsuario(id);
+  }
+
+  async listUsuariosPaginatedWithFilters(pagination: PaginationInput, filters?: FilterInput): Promise<PaginationResult<UsuarioResponse>> {
+    // Since the repository is HttpAuthRepository, cast and call the method
+    const httpRepo = this.usuarioRepository as any; // Cast to access the method
+    return await httpRepo.listUsuariosPaginatedWithFilters(pagination, filters);
   }
 }
 

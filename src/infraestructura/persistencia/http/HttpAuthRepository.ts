@@ -4,6 +4,7 @@ import { LoginRequest, LoginResponse } from '../../../dominio/entidades/Auth';
 import { UsuarioInput, UsuarioResponse } from '../../../dominio/entidades/Usuario';
 import { GraphQLClient } from '../../http/GraphQLClient';
 import { BaseHttpRepository } from './BaseHttpRepository';
+import { PaginationInput, PaginationResult } from '../../../dominio/valueObjects/Pagination';
 
 export class HttpAuthRepository extends BaseHttpRepository<any> implements IAuthRepository, IUsuarioRepository {
   constructor(baseUrl?: string) {
@@ -352,6 +353,57 @@ export class HttpAuthRepository extends BaseHttpRepository<any> implements IAuth
 
     const result = await this.graphqlRequest(mutation, { id });
     return result.deleteUsuario;
+  }
+
+  async listUsuariosPaginatedWithFilters(pagination: PaginationInput, filters?: { dni?: string; _id?: string; nombres?: string; apellidos?: string }): Promise<PaginationResult<UsuarioResponse>> {
+    const query = `
+      query ListUsuariosPaginated($pagination: PaginationInput!, $filters: FilterInput) {
+        listUsuariosPaginated(pagination: $pagination, filters: $filters) {
+          data {
+            id
+            nombres
+            apellidos
+            usuario
+            dni
+            cargo_id {
+              id
+              nombre
+              descripcion
+              gerarquia
+            }
+            rol_id
+            empresa_id {
+              id
+              nombre_comercial
+              razon_social
+              ruc
+            }
+            obra_id {
+              id
+              titulo
+              nombre
+              descripcion
+              ubicacion
+            }
+            telefono
+            firma
+            foto_perfil
+            email
+          }
+          pagination {
+            page
+            limit
+            total
+            totalPages
+            hasNext
+            hasPrev
+          }
+        }
+      }
+    `;
+
+    const result = await this.graphqlRequest(query, { pagination, filters });
+    return result.listUsuariosPaginated;
   }
 }
 

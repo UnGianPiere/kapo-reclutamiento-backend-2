@@ -11,7 +11,13 @@ import { ConvocatoriaResolver } from './ConvocatoriaResolver';
 import { FormularioConfigResolver } from './FormularioConfigResolver';
 import { AplicacionCandidatoResolver } from './AplicacionCandidatoResolver';
 import { EntrevistaLlamadaResolver } from './EntrevistaLlamadaResolver';
+import { EntrevistaRegularResolver } from './EntrevistaRegularResolver';
+import { DebidaDiligenciaResolver } from './DebidaDiligenciaResolver';
 import { HistorialCandidatoResolver } from './HistorialCandidatoResolver';
+import { ReferenciaResolver } from './ReferenciaResolver';
+import { PersonalResolver } from './PersonalResolver';
+import { UploadResolver } from './UploadResolver';
+import { ComunicacionEntradaResolver } from './ComunicacionEntradaResolver';
 
 // Importar servicios
 import { AuthService } from '../../../aplicacion/servicios/AuthService';
@@ -21,10 +27,16 @@ import { FormularioConfigService } from '../../../aplicacion/servicios/Formulari
 import { AplicacionService } from '../../../aplicacion/servicios/AplicacionService';
 import { CandidatoService } from '../../../aplicacion/servicios/CandidatoService';
 import { EntrevistaLlamadaService } from '../../../aplicacion/servicios/EntrevistaLlamadaService';
+import { EntrevistaRegularService } from '../../../aplicacion/servicios/EntrevistaRegularService';
+import { DebidaDiligenciaService } from '../../../aplicacion/servicios/DebidaDiligenciaService';
 import { HistorialCandidatoService } from '../../../aplicacion/servicios/HistorialCandidatoService';
+import { ReferenciaService } from '../../../aplicacion/servicios/ReferenciaService';
+import { PersonalService } from '../../../aplicacion/servicios/PersonalService';
+import { ComunicacionEntradaService } from '../../../aplicacion/servicios/ComunicacionEntradaService';
 
 // Importar repositorios HTTP
 import { HttpAuthRepository } from '../../persistencia/http/HttpAuthRepository';
+import { HttpPersonalRepository } from '../../persistencia/http/HttpPersonalRepository';
 
 // Importar repositorios MongoDB
 import { UsuarioMongoRepository } from '../../persistencia/mongo/UsuarioMongoRepository';
@@ -33,7 +45,11 @@ import { FormularioConfigMongoRepository } from '../../persistencia/mongo/Formul
 import { CandidatoMongoRepository } from '../../persistencia/mongo/CandidatoMongoRepository';
 import { AplicacionCandidatoMongoRepository } from '../../persistencia/mongo/AplicacionCandidatoMongoRepository';
 import { EntrevistaLlamadaMongoRepository } from '../../persistencia/mongo/EntrevistaLlamadaMongoRepository';
+import { EntrevistaRegularMongoRepository } from '../../persistencia/mongo/EntrevistaRegularMongoRepository';
+import { DebidaDiligenciaMongoRepository } from '../../persistencia/mongo/DebidaDiligenciaMongoRepository';
 import { HistorialCandidatoMongoRepository } from '../../persistencia/mongo/HistorialCandidatoMongoRepository';
+import { ReferenciaMongoRepository } from '../../persistencia/mongo/ReferenciaMongoRepository';
+import { ComunicacionEntradaMongoRepository } from '../../persistencia/mongo/ComunicacionEntradaMongoRepository';
 
 // Importar Container para DI
 import { Container } from '../../di/Container';
@@ -71,6 +87,9 @@ export class ResolverFactory {
     // Registrar HttpAuthRepository
     container.register('HttpAuthRepository', () => new HttpAuthRepository(), true);
 
+    // Registrar HttpPersonalRepository
+    container.register('HttpPersonalRepository', () => new HttpPersonalRepository(), true);
+
     // Registrar UsuarioMongoRepository
     container.register('UsuarioMongoRepository', () => new UsuarioMongoRepository(), true);
 
@@ -89,8 +108,20 @@ export class ResolverFactory {
     // Registrar EntrevistaLlamadaMongoRepository
     container.register('EntrevistaLlamadaMongoRepository', () => new EntrevistaLlamadaMongoRepository(), true);
 
+    // Registrar EntrevistaRegularMongoRepository
+    container.register('EntrevistaRegularMongoRepository', () => new EntrevistaRegularMongoRepository(), true);
+
+    // Registrar DebidaDiligenciaMongoRepository
+    container.register('DebidaDiligenciaMongoRepository', () => new DebidaDiligenciaMongoRepository(), true);
+
     // Registrar HistorialCandidatoMongoRepository
     container.register('HistorialCandidatoMongoRepository', () => new HistorialCandidatoMongoRepository(), true);
+
+    // Registrar ReferenciaMongoRepository
+    container.register('ReferenciaMongoRepository', () => new ReferenciaMongoRepository(), true);
+
+    // Registrar ComunicacionEntradaMongoRepository
+    container.register('ComunicacionEntradaMongoRepository', () => new ComunicacionEntradaMongoRepository(), true);
 
     // Registrar AuthService
     container.register('AuthService', (c) => {
@@ -100,7 +131,7 @@ export class ResolverFactory {
 
     // Registrar UsuarioService
     container.register('UsuarioService', (c) => {
-      const usuarioRepo = c.resolve<UsuarioMongoRepository>('UsuarioMongoRepository');
+      const usuarioRepo = c.resolve<HttpAuthRepository>('HttpAuthRepository');
       return new UsuarioService(usuarioRepo);
     }, true);
 
@@ -160,11 +191,40 @@ export class ResolverFactory {
       return new EntrevistaLlamadaService(entrevistaRepo, aplicacionRepo);
     }, true);
 
+    // Registrar EntrevistaRegularService
+    container.register('EntrevistaRegularService', (c) => {
+      const entrevistaRepo = c.resolve<EntrevistaRegularMongoRepository>('EntrevistaRegularMongoRepository');
+      const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
+      return new EntrevistaRegularService(entrevistaRepo, aplicacionRepo);
+    }, true);
+
+    // Registrar DebidaDiligenciaService
+    container.register('DebidaDiligenciaService', (c) => {
+      const debidaDiligenciaRepo = c.resolve<DebidaDiligenciaMongoRepository>('DebidaDiligenciaMongoRepository');
+      const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
+      return new DebidaDiligenciaService(debidaDiligenciaRepo, aplicacionRepo);
+    }, true);
+
     // Registrar HistorialCandidatoService
     container.register('HistorialCandidatoService', (c) => {
       const historialRepo = c.resolve<HistorialCandidatoMongoRepository>('HistorialCandidatoMongoRepository');
       const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
       return new HistorialCandidatoService(historialRepo, aplicacionRepo);
+    }, true);
+
+    // Registrar ReferenciaService
+    container.register('ReferenciaService', (c) => {
+      const referenciaRepo = c.resolve<ReferenciaMongoRepository>('ReferenciaMongoRepository');
+      const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
+      return new ReferenciaService(referenciaRepo, aplicacionRepo);
+    }, true);
+
+    // Registrar ComunicacionEntradaService
+    container.register('ComunicacionEntradaService', (c) => {
+      const comunicacionRepo = c.resolve<ComunicacionEntradaMongoRepository>('ComunicacionEntradaMongoRepository');
+      const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
+      const candidatoRepo = c.resolve<CandidatoMongoRepository>('CandidatoMongoRepository');
+      return new ComunicacionEntradaService(comunicacionRepo, aplicacionRepo, candidatoRepo);
     }, true);
 
     // Registrar AplicacionCandidatoResolver
@@ -181,13 +241,52 @@ export class ResolverFactory {
       return new EntrevistaLlamadaResolver(entrevistaService);
     }, true);
 
+    // Registrar EntrevistaRegularResolver
+    container.register('EntrevistaRegularResolver', (c) => {
+      const entrevistaService = c.resolve<EntrevistaRegularService>('EntrevistaRegularService');
+      return new EntrevistaRegularResolver(entrevistaService);
+    }, true);
+
+    // Registrar DebidaDiligenciaResolver
+    container.register('DebidaDiligenciaResolver', (c) => {
+      const debidaDiligenciaService = c.resolve<DebidaDiligenciaService>('DebidaDiligenciaService');
+      return new DebidaDiligenciaResolver(debidaDiligenciaService);
+    }, true);
+
     // Registrar HistorialCandidatoResolver
     container.register('HistorialCandidatoResolver', (c) => {
       const historialService = c.resolve<HistorialCandidatoService>('HistorialCandidatoService');
       return new HistorialCandidatoResolver(historialService);
     }, true);
 
-    logger.info('Container inicializado con dependencias de autenticación, usuarios, convocatorias, formularios, entrevistas e historial');
+    // Registrar ReferenciaResolver
+    container.register('ReferenciaResolver', (c) => {
+      const referenciaService = c.resolve<ReferenciaService>('ReferenciaService');
+      return new ReferenciaResolver(referenciaService);
+    }, true);
+
+    // Registrar ComunicacionEntradaResolver
+    container.register('ComunicacionEntradaResolver', (c) => {
+      const comunicacionService = c.resolve<ComunicacionEntradaService>('ComunicacionEntradaService');
+      return new ComunicacionEntradaResolver(comunicacionService);
+    }, true);
+
+    // Registrar PersonalService (consumo desde MS Personal)
+    container.register('PersonalService', (c) => {
+      const personalRepo = c.resolve<HttpPersonalRepository>('HttpPersonalRepository');
+      return new PersonalService(personalRepo);
+    }, true);
+
+    // Registrar PersonalResolver
+    container.register('PersonalResolver', (c) => {
+      const personalService = c.resolve<PersonalService>('PersonalService');
+      return new PersonalResolver(personalService);
+    }, true);
+
+    // Registrar UploadResolver
+    container.register('UploadResolver', () => new UploadResolver(), true);
+
+    logger.info('Container inicializado con dependencias de autenticación, usuarios, convocatorias, formularios, entrevistas (llamada y regular), historial, referencias, personal y upload');
   }
 
   /**
@@ -229,10 +328,40 @@ export class ResolverFactory {
       resolvers.push(entrevistaLlamadaResolver.getResolvers());
       logger.debug('Resolver configurado: entrevista-llamada');
 
+      // Crear EntrevistaRegularResolver
+      const entrevistaRegularResolver = container.resolve<EntrevistaRegularResolver>('EntrevistaRegularResolver');
+      resolvers.push(entrevistaRegularResolver.getResolvers());
+      logger.debug('Resolver configurado: entrevista-regular');
+
+      // Crear DebidaDiligenciaResolver
+      const debidaDiligenciaResolver = container.resolve<DebidaDiligenciaResolver>('DebidaDiligenciaResolver');
+      resolvers.push(debidaDiligenciaResolver.getResolvers());
+      logger.debug('Resolver configurado: debida-diligencia');
+
       // Crear HistorialCandidatoResolver
       const historialCandidatoResolver = container.resolve<HistorialCandidatoResolver>('HistorialCandidatoResolver');
       resolvers.push(historialCandidatoResolver.getResolvers());
       logger.debug('Resolver configurado: historial-candidato');
+
+      // Crear ReferenciaResolver
+      const referenciaResolver = container.resolve<ReferenciaResolver>('ReferenciaResolver');
+      resolvers.push(referenciaResolver.getResolvers());
+      logger.debug('Resolver configurado: referencia');
+
+      // Crear ComunicacionEntradaResolver
+      const comunicacionEntradaResolver = container.resolve<ComunicacionEntradaResolver>('ComunicacionEntradaResolver');
+      resolvers.push(comunicacionEntradaResolver.getResolvers());
+      logger.debug('Resolver configurado: comunicacion-entrada');
+
+      // Crear PersonalResolver
+      const personalResolver = container.resolve<PersonalResolver>('PersonalResolver');
+      resolvers.push(personalResolver.getResolvers());
+      logger.debug('Resolver configurado: personal');
+
+      // Crear UploadResolver
+      const uploadResolver = container.resolve<UploadResolver>('UploadResolver');
+      resolvers.push(uploadResolver.getResolvers());
+      logger.debug('Resolver configurado: upload');
     } catch (error) {
       logger.error('Error configurando resolvers', {
         error: error instanceof Error ? error.message : String(error)

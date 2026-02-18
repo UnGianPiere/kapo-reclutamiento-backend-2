@@ -22,6 +22,10 @@ export interface AplicacionCandidatoDocument extends Document {
   fechaAplicacion: Date;
   aplicadoPor: 'CANDIDATO' | 'RECLUTADOR';
 
+  // Timestamps automáticos (agregados por timestamps: true)
+  createdAt: Date;
+  updatedAt: Date;
+
   // Sistema de posibles candidatos
   ordenPrioridad?: number;
   fechaExpiracionPosibles?: Date;

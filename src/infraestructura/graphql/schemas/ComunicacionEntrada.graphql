@@ -1,0 +1,36 @@
+# ============================================================================
+# SCHEMA COMUNICACION ENTRADA - Tipos GraphQL para comunicaciones de entrada
+# ============================================================================
+
+type ComunicacionEntrada {
+  id: ID!
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  llamadaConfirmada: Boolean!
+  comunicacionConfirmada: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+input CrearComunicacionEntradaInput {
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  llamadaConfirmada: Boolean!
+  comunicacionConfirmada: Boolean!
+}
+
+input ActualizarComunicacionEntradaInput {
+  llamadaConfirmada: Boolean
+  comunicacionConfirmada: Boolean
+}
+
+# Queries
+extend type Query {
+  obtenerComunicacionEntradaPorAplicacion(aplicacionCandidatoId: ID!): ComunicacionEntrada
+}
+
+# Mutations
+extend type Mutation {
+  crearComunicacionEntrada(input: CrearComunicacionEntradaInput!): ComunicacionEntrada!
+  actualizarComunicacionEntrada(id: ID!, input: ActualizarComunicacionEntradaInput!): ComunicacionEntrada!
+}

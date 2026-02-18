@@ -62,10 +62,10 @@ export interface EntrevistaLlamada {
   pretension_negociable: 'SI' | 'NO';
 
   /** Comentarios del entrevistador */
-  comentarios: string;
+  comentarios?: string;
 
   /** Solicitar referencias */
-  solicitar_referencias: string;
+  solicitar_referencias?: string;
 
   /** Información del entrevistador */
   entrevistador_id: string;
@@ -105,8 +105,8 @@ export interface CrearEntrevistaInput {
   interes_puesto: number;
   pretension_monto: number;
   pretension_negociable: 'SI' | 'NO';
-  comentarios: string;
-  solicitar_referencias: string;
+  comentarios?: string;
+  solicitar_referencias?: string;
   entrevistador_id: string;
   entrevistador_nombre: string;
   observaciones: string;

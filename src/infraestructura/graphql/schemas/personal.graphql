@@ -1,0 +1,165 @@
+# ============================================================================
+# ESQUEMA GRAPHQL - PERSONAL (Consumo desde MS Personal)
+# ============================================================================
+
+# Tipos principales
+type Personal {
+  id: ID!
+  dni: String!
+  nombres: String!
+  ap_paterno: String!
+  ap_materno: String!
+  ruc: String
+  fecha_nacimiento: DateTime
+  genero: String
+  celular: String
+  correo_personal: String
+  correo_corporativo: String
+  fecha_vencimiento_dni: DateTime
+  direccion: String
+  fecha_creacion: DateTime!
+  fecha_actualizacion: DateTime!
+  fecha_registro: DateTime
+  fecha_ingreso: DateTime
+  empresa_id: String
+  estado: Boolean
+  carrera: String
+  formacion: String
+  situacion_permanencia: String
+  alta_t_registro: String
+  estado_civil: String
+  observaciones: String
+  empleabilidad_id: ID
+  disponibilidad: Boolean
+  cargo_categoria_especialidad_id: ID
+  empleabilidades: [Empleabilidad!]!
+  foto_perfil: ArchivoSustento
+  estado_documento: String
+  plantilla_id: ID
+  jefe_inmediato_id: ID
+  pension_tipo: String
+  pension_tipo_comision: String
+  pension_tipo_fecha_inicio: DateTime
+  pension_tipo_fecha_fin: DateTime
+  tipo_empleado: String
+  usuario_id: ID
+  usuario_creacion: UsuarioCreador
+  jefe_inmediato: Personal
+  historial_pension: [HistorialPensionEmpleadoCH!]!
+  fecha_ingreso_personal: DateTime
+  fecha_salida_personal: DateTime
+}
+
+type Empleabilidad {
+  id: ID!
+  empleado_id: ID!
+  obra_id: ID!
+  fecha_ingreso: DateTime!
+  fecha_baja: DateTime
+  estado: String!
+  cargo_categoria_especialidad_id: ID!
+  movilidad_id: ID!
+  disponibilidad: Boolean!
+  observaciones: String
+  fecha_creacion: DateTime!
+  fecha_actualizacion: DateTime!
+  obra: Obra
+  movilidad: Movilidad
+  cargo_categoria_especialidad: CargoCategoriaEspecialidad
+}
+
+type ArchivoSustento {
+  id: ID!
+  nombre: String!
+  ruta: String!
+  tipo: String!
+  tamano: Int!
+  fecha_creacion: DateTime!
+}
+
+type UsuarioCreador {
+  id: ID!
+  nombres: String!
+  apellidos: String!
+  nombre_completo: String!
+  usuario: String!
+}
+
+type HistorialPensionEmpleadoCH {
+  id: ID!
+  empleado_id: ID!
+  tipo_pension_anterior: String!
+  tipo_pension_nuevo: String!
+  fecha_cambio: DateTime!
+  observaciones: String
+  fecha_creacion: DateTime!
+  usuario_id: ID!
+}
+
+type Obra {
+  id: ID!
+  nombre: String!
+  codigo: String!
+  titulo: String
+  descripcion: String
+  ubicacion: String
+}
+
+type Movilidad {
+  id: ID!
+  descripcion: String!
+}
+
+type CargoCategoriaEspecialidad {
+  id: ID!
+  cargo: String!
+  categoria: String!
+  especialidad: String!
+}
+
+# Resultado de paginación
+type PersonalPaginadoResult {
+  data: [Personal!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+# Inputs para filtros
+input PersonalFilterInput {
+  ids: [ID!]
+  search: String
+  disponibilidad: Boolean
+  empleabilidad_id: String
+  actualizado_despues_de: DateTime
+}
+
+input PersonalReferenciasInput {
+  conFotoPerfil: Boolean
+  conEmpleabilidadActual: Boolean
+  conEmpleabilidadActualMovilidad: Boolean
+}
+
+# Consultas
+extend type Query {
+  # Obtener empleados paginados desde el sistema PERSONAL
+  empleadosPaginados(
+    page: Int = 1
+    limit: Int = 10
+    filter: PersonalFilterInput
+    referencias: PersonalReferenciasInput
+  ): PersonalPaginadoResult!
+
+  # Obtener empleado por ID desde el sistema PERSONAL
+  obtenerEmpleadoPorId(id: ID!): Personal
+
+  # Buscar empleados por texto desde el sistema PERSONAL
+  buscarEmpleados(search: String, page: Int = 1, limit: Int = 10): PersonalPaginadoResult!
+
+  # Obtener empleados disponibles desde el sistema PERSONAL
+  obtenerEmpleadosDisponibles(page: Int = 1, limit: Int = 10): PersonalPaginadoResult!
+}
+
+# Escalar para fechas
+scalar DateTime

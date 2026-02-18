@@ -1,0 +1,113 @@
+# ============================================================================
+# SCHEMA DEBIDA DILIGENCIA - Tipos GraphQL para evaluaciones de debida diligencia
+# ============================================================================
+
+type DebidaDiligencia {
+  id: ID!
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  evaluador_id: ID!
+  nombre_evaluador: String!
+  codigo: String!
+  fecha_aprobacion: DateTime
+  fecha_evaluacion: DateTime!
+  criterios: JSON!
+  puntaje_total: Int!
+  nivel_riesgo: NivelRiesgo!
+  accion: AccionEvaluacion
+  controles: [ControlEvaluacion!]
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type CriterioEvaluacion {
+  ponderacion: Int!
+  respuesta: String!
+  puntaje: Int!
+}
+
+type ControlEvaluacion {
+  criterio: String!
+  responsable: ID!
+  nombre_responsable: String!
+  fecha_limite: DateTime!
+}
+
+enum NivelRiesgo {
+  BAJO
+  MODERADO
+  ALTO
+  CRITICO
+}
+
+enum AccionEvaluacion {
+  NO_ESTABLECER
+  SUSPENDER
+  TERMINAR
+  ACEPTAR_CON_CONTROLES
+}
+
+input CrearDebidaDiligenciaInput {
+  aplicacionCandidatoId: ID!
+  candidatoId: ID!
+  evaluador_id: ID!
+  nombre_evaluador: String!
+  codigo: String!
+  fecha_aprobacion: DateTime
+  fecha_evaluacion: DateTime!
+  criterios: JSON!
+  puntaje_total: Int!
+  nivel_riesgo: NivelRiesgo!
+  accion: AccionEvaluacion
+  controles: [CrearControlEvaluacionInput!]
+}
+
+input ActualizarDebidaDiligenciaInput {
+  evaluador_id: ID
+  nombre_evaluador: String
+  fecha_aprobacion: DateTime
+  fecha_evaluacion: DateTime
+  criterios: JSON
+  puntaje_total: Int
+  nivel_riesgo: NivelRiesgo
+  accion: AccionEvaluacion
+  controles: [CrearControlEvaluacionInput!]
+}
+
+input CrearControlEvaluacionInput {
+  criterio: String!
+  responsable: ID!
+  nombre_responsable: String!
+  fecha_limite: DateTime!
+}
+
+# Queries
+extend type Query {
+  obtenerDebidaDiligencia(id: ID!): DebidaDiligencia
+  obtenerDebidaDiligenciaPorAplicacion(aplicacionCandidatoId: ID!): DebidaDiligencia
+  listarDebidasDiligencias(
+    filtros: FiltrosDebidaDiligencia
+  ): [DebidaDiligencia!]!
+  contarDebidasDiligencias(
+    filtros: FiltrosDebidaDiligencia
+  ): Int!
+  existeDebidaDiligencia(aplicacionCandidatoId: ID!): Boolean!
+}
+
+input FiltrosDebidaDiligencia {
+  aplicacionCandidatoId: ID
+  candidatoId: ID
+  evaluador_id: ID
+  nivel_riesgo: NivelRiesgo
+  fechaDesde: DateTime
+  fechaHasta: DateTime
+  limit: Int
+  offset: Int
+}
+
+# Mutations
+extend type Mutation {
+  crearDebidaDiligencia(input: CrearDebidaDiligenciaInput!): DebidaDiligencia!
+  actualizarDebidaDiligencia(id: ID!, input: ActualizarDebidaDiligenciaInput!): DebidaDiligencia!
+  eliminarDebidaDiligencia(id: ID!): Boolean!
+}
