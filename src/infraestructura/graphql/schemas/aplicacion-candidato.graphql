@@ -133,6 +133,7 @@ input ActualizarAplicacionInput {
   esRepostulacion: Boolean
   esPosibleCandidatoActivado: Boolean
   aplicacionPrincipalRechazadaId: ID
+  convocatoriaId: ID
 }
 
 # Queries
@@ -197,5 +198,6 @@ type Mutation {
   crearAplicacion(input: CrearAplicacionCompletaInput!): AplicacionCandidato!
   actualizarAplicacion(id: ID!, input: ActualizarAplicacionInput!): AplicacionCandidato!
   cambiarEstadoKanban(id: ID!, estadoKanban: EstadoKanban!): AplicacionCandidato!
+  reactivarAplicacion(id: ID!, realizadoPor: ID!, realizadoPorNombre: String!, motivo: String, comentarios: String): AplicacionCandidato!
   eliminarAplicacion(id: ID!): Boolean!
 }

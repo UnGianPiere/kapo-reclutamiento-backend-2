@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 /**
  * Repositorio MongoDB para la gestión de aplicaciones de candidatos
  * Implementa la interfaz IAplicacionCandidatoRepository
- */
+*/
 export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<AplicacionCandidato> implements IAplicacionCandidatoRepository {
   constructor() {
     super(AplicacionCandidatoModel);
@@ -22,7 +22,7 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
    * Convierte documento de MongoDB a entidad de dominio
    */
   protected toDomain(doc: any): AplicacionCandidato {
-    return {
+    const domainEntity = {
       id: doc._id.toString(),
       candidatoId: doc.candidatoId.toString(),
       convocatoriaId: doc.convocatoriaId.toString(),
@@ -32,6 +32,8 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       estadoKanban: doc.estadoKanban,
 
       aniosExperienciaPuesto: doc.aniosExperienciaPuesto,
+      aniosExperienciaGeneral: doc.aniosExperienciaGeneral,
+      medioConvocatoria: doc.medioConvocatoria,
       pretensionEconomica: doc.pretensionEconomica,
       curriculumUrl: doc.curriculumUrl,
 
@@ -53,6 +55,7 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       fechaActualizacion: doc.fechaActualizacion || doc.fechaAplicacion,
       tiempoEnEstadoDias: doc.tiempoEnEstadoDias || 0
     };
+    return domainEntity;
   }
 
   /**
@@ -70,6 +73,8 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       estadoKanban: doc.estadoKanban,
 
       aniosExperienciaPuesto: doc.aniosExperienciaPuesto,
+      aniosExperienciaGeneral: doc.aniosExperienciaGeneral,
+      medioConvocatoria: doc.medioConvocatoria,
       pretensionEconomica: doc.pretensionEconomica,
       curriculumUrl: doc.curriculumUrl,
 
@@ -109,6 +114,8 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       aplicadoPor: input.aplicadoPor || 'CANDIDATO',
       estadoKanban: EstadoKanban.CVS_RECIBIDOS,
       aniosExperienciaPuesto: input.aniosExperienciaPuesto || 0,
+      aniosExperienciaGeneral: input.aniosExperienciaGeneral !== undefined ? input.aniosExperienciaGeneral : 0,
+      medioConvocatoria: input.medioConvocatoria !== undefined ? input.medioConvocatoria : 'Otro',
       pretensionEconomica: input.pretensionEconomica || 0,
       curriculumUrl: input.curriculumUrl || '',
       fechaAplicacion: new Date(),
@@ -162,6 +169,8 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
     const updateData: any = {};
 
     if (input.aniosExperienciaPuesto !== undefined) updateData.aniosExperienciaPuesto = input.aniosExperienciaPuesto;
+    if (input.aniosExperienciaGeneral !== undefined) updateData.aniosExperienciaGeneral = input.aniosExperienciaGeneral;
+    if (input.medioConvocatoria !== undefined) updateData.medioConvocatoria = input.medioConvocatoria;
     if (input.pretensionEconomica !== undefined) updateData.pretensionEconomica = input.pretensionEconomica;
     if (input.curriculumUrl !== undefined) updateData.curriculumUrl = input.curriculumUrl;
     if (input.respuestasFormulario !== undefined) updateData.respuestasFormulario = input.respuestasFormulario;
@@ -175,6 +184,7 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
     if (input.esRepostulacion !== undefined) updateData.esRepostulacion = input.esRepostulacion;
     if (input.esPosibleCandidatoActivado !== undefined) updateData.esPosibleCandidatoActivado = input.esPosibleCandidatoActivado;
     if (input.aplicacionPrincipalRechazadaId !== undefined) updateData.aplicacionPrincipalRechazadaId = input.aplicacionPrincipalRechazadaId;
+    if (input.convocatoriaId !== undefined) updateData.convocatoriaId = new mongoose.Types.ObjectId(input.convocatoriaId);
 
     const aplicacion = await this.update(id, updateData);
     if (!aplicacion) {

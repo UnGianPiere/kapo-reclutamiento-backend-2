@@ -2,7 +2,7 @@
 // ENTIDAD DEBIDA DILIGENCIA - Evaluación de debida diligencia al personal
 // ============================================================================
 
-export type NivelRiesgo = 'BAJO' | 'MODERADO' | 'ALTO' | 'CRÍTICO';
+export type NivelRiesgo = 'BAJO' | 'MODERADO' | 'ALTO' | 'CRITICO';
 export type AccionEvaluacion = 'NO_ESTABLECER' | 'SUSPENDER' | 'TERMINAR' | 'ACEPTAR_CON_CONTROLES';
 
 export interface CriterioEvaluacion {
@@ -13,8 +13,7 @@ export interface CriterioEvaluacion {
 
 export interface ControlEvaluacion {
   criterio: string;
-  responsable: string; // ID del usuario
-  nombre_responsable: string;
+  responsable: string;
   fecha_limite: Date;
 }
 

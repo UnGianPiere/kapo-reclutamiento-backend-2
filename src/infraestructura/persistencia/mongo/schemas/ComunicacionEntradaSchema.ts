@@ -44,7 +44,6 @@ const ComunicacionEntradaSchema = new Schema<ComunicacionEntradaDocument>({
 // Índices para búsquedas eficientes
 ComunicacionEntradaSchema.index(
   { aplicacionCandidatoId: 1 },
-  { unique: true }
 );
 ComunicacionEntradaSchema.index({ candidatoId: 1 });
 ComunicacionEntradaSchema.index({ created_at: -1 });

@@ -9,6 +9,8 @@ export interface CandidatoDocument extends Document {
   telefono: string;
   lugarResidencia?: string;
   curriculumUrl: string;
+  totalAplicaciones?: number;
+  aplicacionesGanadas?: number;
 }
 
 const CandidatoSchema = new Schema<CandidatoDocument>({
@@ -37,7 +39,9 @@ const CandidatoSchema = new Schema<CandidatoDocument>({
   },
   telefono: { type: String, required: true },
   lugarResidencia: { type: String, trim: true },
-  curriculumUrl: { type: String, required: true }
+  curriculumUrl: { type: String, required: true },
+  totalAplicaciones: { type: Number, default: 0 },
+  aplicacionesGanadas: { type: Number, default: 0 }
 }, {
   collection: 'candidato',
   timestamps: true

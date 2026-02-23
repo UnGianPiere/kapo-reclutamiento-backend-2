@@ -30,8 +30,12 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
       correo: doc.correo,
       telefono: doc.telefono,
       curriculumUrl: doc.curriculumUrl,
-      fechaCreacion: doc.createdAt,
-      fechaActualizacion: doc.updatedAt
+      totalAplicaciones: doc.totalAplicaciones || 0,
+      aplicacionesGanadas: doc.aplicacionesGanadas || 0,
+      fechaRegistro: doc.createdAt,
+      fechaActualizacion: doc.updatedAt,
+      correosHistoricos: doc.correosHistoricos || [],
+      telefonosHistoricos: doc.telefonosHistoricos || []
     };
 
     if (doc.lugarResidencia !== undefined) {
@@ -45,16 +49,11 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
    * Crear un nuevo candidato
    */
   async crear(candidato: Omit<Candidato, 'id' | 'fechaCreacion' | 'fechaActualizacion'>, session?: mongoose.ClientSession): Promise<Candidato> {
-    console.log('CandidatoMongoRepository.crear - candidato input:', candidato);
-
     // Crear documento usando new Model().save() para mejor compatibilidad con sessions
     const newDoc = new this.model(candidato);
     const doc = await newDoc.save(session ? { session } : undefined);
-
-    console.log('CandidatoMongoRepository.crear - doc created:', doc);
-    const result = this.toDomain(doc);
-    console.log('CandidatoMongoRepository.crear - result:', result);
-    return result;
+    
+    return this.toDomain(doc);
   }
 
   /**
@@ -126,6 +125,7 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
    * Buscar candidatos por criterios de búsqueda
    */
   async buscar(filtros: {
+    dni?: string;
     nombres?: string;
     apellidos?: string;
     correo?: string;
@@ -136,6 +136,9 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
   }): Promise<{ candidatos: Candidato[]; total: number }> {
     const query: any = {};
 
+    if (filtros.dni) {
+      query.dni = { $regex: filtros.dni, $options: 'i' };
+    }
     if (filtros.nombres) {
       query.nombres = { $regex: filtros.nombres, $options: 'i' };
     }
@@ -173,5 +176,41 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
    */
   async eliminar(id: string): Promise<void> {
     await this.delete(id);
+  }
+
+  /**
+   * Incrementar contador de totalAplicaciones del candidato
+   */
+  async incrementarTotalAplicaciones(id: string, session?: mongoose.ClientSession): Promise<void> {
+    await CandidatoModel.findByIdAndUpdate(
+      id,
+      { $inc: { totalAplicaciones: 1 } },
+      session ? { session } : undefined
+    );
+  }
+
+  /**
+   * Incrementar contador de aplicacionesGanadas del candidato
+   */
+  async incrementarAplicacionesGanadas(id: string, session?: mongoose.ClientSession): Promise<void> {
+    await CandidatoModel.findByIdAndUpdate(
+      id,
+      { $inc: { aplicacionesGanadas: 1 } },
+      session ? { session } : undefined
+    );
+  }
+
+  /**
+   * Inicializar estadísticas del candidato (totalAplicaciones = 1, aplicacionesGanadas = 0)
+   */
+  async inicializarEstadisticas(id: string, session?: mongoose.ClientSession): Promise<void> {
+    await CandidatoModel.findByIdAndUpdate(
+      id,
+      {
+        totalAplicaciones: 1,
+        aplicacionesGanadas: 0
+      },
+      session ? { session } : undefined
+    );
   }
 }

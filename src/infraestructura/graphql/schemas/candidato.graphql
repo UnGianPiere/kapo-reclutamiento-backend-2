@@ -20,6 +20,7 @@ type Candidato {
 
   # Metadata
   totalAplicaciones: Int!
+  aplicacionesGanadas: Int
   fechaRegistro: DateTime!
   fechaActualizacion: DateTime!
 
@@ -41,6 +42,7 @@ input CandidatoInput {
 
 # Queries
 type Query {
+  # Queries normales (dashboard empresa)
   obtenerCandidato(id: ID!): Candidato
   buscarCandidatoPorDNI(dni: String!): Candidato
   buscarCandidatoPorCorreo(correo: String!): Candidato
@@ -55,6 +57,19 @@ type Query {
     offset: Int
   ): CandidatoConnection!
   obtenerCandidatosDuplicados: [Candidato!]!
+  
+  # Queries encriptadas (público)
+  obtenerCandidatoEncriptado(id: ID!): Candidato
+  listarCandidatosEncriptados(
+    dni: String
+    nombres: String
+    correo: String
+    telefono: String
+    fechaRegistroDesde: DateTime
+    fechaRegistroHasta: DateTime
+    limit: Int
+    offset: Int
+  ): CandidatoConnection!
 }
 
 type CandidatoConnection {

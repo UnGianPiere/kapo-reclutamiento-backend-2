@@ -13,7 +13,7 @@ export interface DebidaDiligenciaDocument extends Document {
   puntaje_total: number;
   nivel_riesgo: NivelRiesgo;
   accion?: AccionEvaluacion | undefined;
-  controles?: Array<{ criterio: string; responsable: mongoose.Types.ObjectId; nombre_responsable: string; fecha_limite: Date }>;
+  controles?: Array<{ criterio: string; responsable: string; fecha_limite: Date }>;
   created_at: Date;
   updated_at: Date;
 }
@@ -26,8 +26,7 @@ const CriterioSchema = new Schema({
 
 const ControlSchema = new Schema({
   criterio: { type: String, required: true },
-  responsable: { type: String, ref: 'Usuario', required: true },
-  nombre_responsable: { type: String, required: true },
+  responsable: { type: String, required: true },
   fecha_limite: { type: Date, required: true }
 }, { _id: false });
 
@@ -85,7 +84,7 @@ const DebidaDiligenciaSchema = new Schema<DebidaDiligenciaDocument>({
 
   nivel_riesgo: {
     type: String,
-    enum: ['BAJO', 'MODERADO', 'ALTO', 'CRÍTICO'],
+    enum: ['BAJO', 'MODERADO', 'ALTO', 'CRITICO'],
     required: true
   },
 

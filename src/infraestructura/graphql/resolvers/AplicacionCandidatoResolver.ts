@@ -167,6 +167,13 @@ export class AplicacionCandidatoResolver {
             args
           );
         },
+        reactivarAplicacion: async (_: unknown, args: { id: string; realizadoPor: string; realizadoPorNombre: string; motivo?: string; comentarios?: string }) => {
+          return await ErrorHandler.handleError(
+            async () => await this.aplicacionService.reactivarAplicacion(args.id, args.realizadoPor, args.realizadoPorNombre, args.motivo, args.comentarios),
+            'reactivarAplicacion',
+            args
+          );
+        },
         eliminarAplicacion: async (_: unknown, args: { id: string }) => {
           return await ErrorHandler.handleError(
             async () => {

@@ -28,8 +28,7 @@ type CriterioEvaluacion {
 
 type ControlEvaluacion {
   criterio: String!
-  responsable: ID!
-  nombre_responsable: String!
+  responsable: String!
   fecha_limite: DateTime!
 }
 
@@ -76,8 +75,7 @@ input ActualizarDebidaDiligenciaInput {
 
 input CrearControlEvaluacionInput {
   criterio: String!
-  responsable: ID!
-  nombre_responsable: String!
+  responsable: String!
   fecha_limite: DateTime!
 }
 

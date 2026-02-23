@@ -58,4 +58,19 @@ export interface ICandidatoRepository {
    * Eliminar candidato (solo si no tiene aplicaciones activas)
    */
   eliminar(id: string): Promise<void>;
+
+  /**
+   * Incrementar contador de totalAplicaciones del candidato
+   */
+  incrementarTotalAplicaciones(id: string, session?: mongoose.ClientSession): Promise<void>;
+
+  /**
+   * Incrementar contador de aplicacionesGanadas del candidato
+   */
+  incrementarAplicacionesGanadas(id: string, session?: mongoose.ClientSession): Promise<void>;
+
+  /**
+   * Inicializar estadísticas del candidato (totalAplicaciones = 1, aplicacionesGanadas = 0)
+   */
+  inicializarEstadisticas(id: string, session?: mongoose.ClientSession): Promise<void>;
 }

@@ -85,4 +85,5 @@ export interface ActualizarAplicacionInput {
   esRepostulacion?: boolean;
   esPosibleCandidatoActivado?: boolean;
   aplicacionPrincipalRechazadaId?: string;
+  convocatoriaId?: string;
 }

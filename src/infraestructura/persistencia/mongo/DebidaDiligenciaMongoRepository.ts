@@ -36,7 +36,6 @@ export class DebidaDiligenciaMongoRepository implements IDebidaDiligenciaReposit
     if (savedDoc.controles !== undefined) result.controles = savedDoc.controles.map(control => ({
       criterio: control.criterio,
       responsable: (control.responsable || '').toString(),
-      nombre_responsable: control.nombre_responsable,
       fecha_limite: control.fecha_limite
     }));
 
@@ -67,7 +66,6 @@ export class DebidaDiligenciaMongoRepository implements IDebidaDiligenciaReposit
     if (documento.controles !== undefined) result.controles = documento.controles.map(control => ({
       criterio: control.criterio,
       responsable: (control.responsable || '').toString(),
-      nombre_responsable: control.nombre_responsable,
       fecha_limite: control.fecha_limite
     }));
 
@@ -101,7 +99,6 @@ export class DebidaDiligenciaMongoRepository implements IDebidaDiligenciaReposit
     if (documento.controles !== undefined) result.controles = documento.controles.map(control => ({
       criterio: control.criterio,
       responsable: (control.responsable || '').toString(),
-      nombre_responsable: control.nombre_responsable,
       fecha_limite: control.fecha_limite
     }));
 
@@ -141,7 +138,6 @@ export class DebidaDiligenciaMongoRepository implements IDebidaDiligenciaReposit
     if (documento.controles !== undefined) result.controles = documento.controles.map(control => ({
       criterio: control.criterio,
       responsable: (control.responsable || '').toString(),
-      nombre_responsable: control.nombre_responsable,
       fecha_limite: control.fecha_limite
     }));
 
@@ -203,7 +199,6 @@ export class DebidaDiligenciaMongoRepository implements IDebidaDiligenciaReposit
       if (documento.controles !== undefined) result.controles = documento.controles.map(control => ({
         criterio: control.criterio,
         responsable: (control.responsable || '').toString(),
-        nombre_responsable: control.nombre_responsable,
         fecha_limite: control.fecha_limite
       }));
 

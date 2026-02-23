@@ -158,8 +158,8 @@ export class DebidaDiligenciaService {
     }
 
     // Validar nivel de riesgo
-    if (input.nivel_riesgo && !['BAJO', 'MODERADO', 'ALTO', 'CRÍTICO'].includes(input.nivel_riesgo)) {
-      throw new Error('El nivel de riesgo debe ser BAJO, MODERADO, ALTO o CRÍTICO');
+    if (input.nivel_riesgo && !['BAJO', 'MODERADO', 'ALTO', 'CRITICO'].includes(input.nivel_riesgo)) {
+      throw new Error('El nivel de riesgo debe ser BAJO, MODERADO, ALTO o CRITICO');
     }
 
     // Validar acción

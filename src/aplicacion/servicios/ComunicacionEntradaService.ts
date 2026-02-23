@@ -34,12 +34,6 @@ export class ComunicacionEntradaService {
       throw new Error('Candidato no encontrado');
     }
 
-    // Verificar que no existe ya una comunicación para esta aplicación
-    const existe = await this.comunicacionRepository.existeParaAplicacion(input.aplicacionCandidatoId);
-    if (existe) {
-      throw new Error('Ya existe una comunicación de entrada para esta aplicación');
-    }
-
     return this.comunicacionRepository.crear(input);
   }
 

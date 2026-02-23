@@ -30,6 +30,7 @@ export class CandidatoService {
   }
 
   async buscarCandidatos(filtros: {
+    dni?: string;
     nombres?: string;
     apellidos?: string;
     correo?: string;

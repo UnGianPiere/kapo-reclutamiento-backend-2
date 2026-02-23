@@ -6,6 +6,7 @@ import { Candidato } from '../../dominio/entidades/Candidato';
 import { EstadoKanban } from '../../dominio/entidades/EstadoKanban';
 import { ICandidatoRepository } from '../../dominio/repositorios/ICandidatoRepository';
 import { IAplicacionCandidatoRepository } from '../../dominio/repositorios/IAplicacionCandidatoRepository';
+import { HistorialCandidatoService } from './HistorialCandidatoService';
 import mongoose from 'mongoose';
 
 export interface CrearAplicacionCompletaInput {
@@ -23,6 +24,8 @@ export interface CrearAplicacionCompletaInput {
   respuestasFormulario: Record<string, unknown>; // Campos dinámicos en JSON
   camposEspecificos: { // Campos directos en AplicacionCandidato
     aniosExperienciaPuesto: number;
+    aniosExperienciaGeneral: number;  // ← AGREGAR ESTE
+    medioConvocatoria: string;       // ← AGREGAR ESTE
     pretensionEconomica: number;
     curriculumUrl: string;
   };
@@ -32,7 +35,8 @@ export interface CrearAplicacionCompletaInput {
 export class AplicacionService {
   constructor(
     private readonly candidatoRepository: ICandidatoRepository,
-    private readonly aplicacionRepository: IAplicacionCandidatoRepository
+    private readonly aplicacionRepository: IAplicacionCandidatoRepository,
+    private readonly historialService: HistorialCandidatoService
   ) {}
 
   async crearAplicacionCompleta(input: CrearAplicacionCompletaInput): Promise<AplicacionCandidato> {
@@ -43,52 +47,96 @@ export class AplicacionService {
       return await session.withTransaction(async () => {
         console.log('AplicacionService.crearAplicacionCompleta - Starting transaction');
 
-        // 1. Buscar o crear candidato
+        // 1. Buscar candidato
         let candidato = await this.buscarCandidatoPorDNI(input.candidatoData.dni);
 
-        if (!candidato) {
-          console.log('AplicacionService.crearAplicacionCompleta - Creating new candidate');
-          candidato = await this.crearCandidato(input.candidatoData, session);
-          console.log('AplicacionService.crearAplicacionCompleta - Candidate created:', candidato.id);
-        } else {
-          console.log('AplicacionService.crearAplicacionCompleta - Candidate exists:', candidato.id);
-          // Actualizar datos si han cambiado
-          candidato = await this.actualizarCandidatoSiNecesario(candidato, input.candidatoData, session);
+        // 2. Buscar aplicación existente del mismo candidato a la misma convocatoria
+        let aplicacionExistente: AplicacionCandidato | null = null;
+        if (candidato) {
+          aplicacionExistente = await this.aplicacionRepository.obtenerPorCandidatoYConvocatoria(candidato.id, input.convocatoriaId);
         }
 
-        // 2. Crear aplicación con datos completos
-        const aplicacion: AplicacionCandidato = {
-          id: '', // Se asignará en persistencia
-          candidatoId: candidato.id,
-          convocatoriaId: input.convocatoriaId,
-
-          // ✅ Respuestas del formulario (CAMPOS DINÁMICOS)
-          respuestasFormulario: input.respuestasFormulario,
-
-          // ✅ Estado inicial del kanban
-          estadoKanban: EstadoKanban.CVS_RECIBIDOS,
-
-          // ✅ CAMPOS ESPECÍFICOS (directos en AplicacionCandidato)
-          aniosExperienciaPuesto: input.camposEspecificos.aniosExperienciaPuesto,
-          pretensionEconomica: input.camposEspecificos.pretensionEconomica,
-          curriculumUrl: input.camposEspecificos.curriculumUrl,
-
-          // Metadata
-          fechaAplicacion: new Date(),
-          aplicadoPor: input.aplicadoPor,
-
-          // Valores por defecto para campos opcionales
-          posibleDuplicado: false,
-          duplicadoRevisado: false,
-          esRepostulacion: false,
-          esPosibleCandidatoActivado: false
-        };
-
-        // 3. Persistir aplicación
-        const aplicacionGuardada = await this.guardarAplicacion(aplicacion, session);
-        console.log('AplicacionService.crearAplicacionCompleta - Application created:', aplicacionGuardada.id);
-
-        return aplicacionGuardada;
+        // 3. Manejar los tres casos
+        if (aplicacionExistente && candidato) {
+          // CASO 1: Mismo candidato, misma convocatoria (ACTUALIZACIÓN)
+          console.log('Caso 1: Actualizando aplicación existente para candidato:', candidato.id, 'en convocatoria:', input.convocatoriaId);
+          
+          // Actualizar datos del candidato si es necesario
+          candidato = await this.actualizarCandidatoSiNecesario(candidato, input.candidatoData, session);
+          
+          // Actualizar aplicación existente
+          const aplicacionActualizada = await this.actualizarAplicacion(aplicacionExistente.id, {
+            aniosExperienciaPuesto: input.camposEspecificos.aniosExperienciaPuesto,
+            aniosExperienciaGeneral: input.camposEspecificos.aniosExperienciaGeneral,
+            medioConvocatoria: input.camposEspecificos.medioConvocatoria,
+            pretensionEconomica: input.camposEspecificos.pretensionEconomica,
+            curriculumUrl: input.camposEspecificos.curriculumUrl,
+            respuestasFormulario: input.respuestasFormulario
+          });
+          
+          return aplicacionActualizada;
+          
+        } else if (candidato) {
+          // CASO 2: Mismo candidato, diferente convocatoria (NUEVA APLICACIÓN)
+          console.log('Caso 2: Creando nueva aplicación para candidato existente:', candidato.id, 'en convocatoria:', input.convocatoriaId);
+          
+          // Actualizar candidato con datos más recientes e incrementar totalAplicaciones
+          candidato = await this.actualizarCandidatoSiNecesario(candidato, input.candidatoData, session);
+          await this.incrementarTotalAplicaciones(candidato.id, session);
+          
+          // Crear nueva aplicación
+          const aplicacion = await this.guardarAplicacion({
+            id: '',
+            candidatoId: candidato.id,
+            convocatoriaId: input.convocatoriaId,
+            respuestasFormulario: input.respuestasFormulario,
+            estadoKanban: EstadoKanban.CVS_RECIBIDOS,
+            aniosExperienciaPuesto: input.camposEspecificos.aniosExperienciaPuesto,
+            aniosExperienciaGeneral: input.camposEspecificos.aniosExperienciaGeneral,
+            medioConvocatoria: input.camposEspecificos.medioConvocatoria,
+            pretensionEconomica: input.camposEspecificos.pretensionEconomica,
+            curriculumUrl: input.camposEspecificos.curriculumUrl,
+            fechaAplicacion: new Date(),
+            aplicadoPor: input.aplicadoPor,
+            posibleDuplicado: false,
+            duplicadoRevisado: false,
+            esRepostulacion: false,
+            esPosibleCandidatoActivado: false
+          }, session);
+          return aplicacion;
+          
+        } else {
+          // CASO 3: Candidato completamente nuevo (CREAR TODO)
+          console.log('Caso 3: Creando nuevo candidato y aplicación');
+          
+          // Crear nuevo candidato con totalAplicaciones = 1
+          candidato = await this.crearCandidato(input.candidatoData, session);
+          console.log('AplicacionService.crearAplicacionCompleta - Candidate created:', candidato.id);
+          
+          // Inicializar estadísticas del candidato
+          await this.inicializarEstadisticasCandidato(candidato.id, session);
+          
+          // Crear nueva aplicación
+          const aplicacion = await this.guardarAplicacion({
+            id: '',
+            candidatoId: candidato.id,
+            convocatoriaId: input.convocatoriaId,
+            respuestasFormulario: input.respuestasFormulario,
+            estadoKanban: EstadoKanban.CVS_RECIBIDOS,
+            aniosExperienciaPuesto: input.camposEspecificos.aniosExperienciaPuesto,
+            aniosExperienciaGeneral: input.camposEspecificos.aniosExperienciaGeneral,
+            medioConvocatoria: input.camposEspecificos.medioConvocatoria,
+            pretensionEconomica: input.camposEspecificos.pretensionEconomica,
+            curriculumUrl: input.camposEspecificos.curriculumUrl,
+            fechaAplicacion: new Date(),
+            aplicadoPor: input.aplicadoPor,
+            posibleDuplicado: false,
+            duplicadoRevisado: false,
+            esRepostulacion: false,
+            esPosibleCandidatoActivado: false
+          }, session);
+          return aplicacion;
+        }
       });
     } catch (error) {
       console.error('AplicacionService.crearAplicacionCompleta - Transaction failed:', error);
@@ -104,7 +152,7 @@ export class AplicacionService {
   }
 
   private async crearCandidato(data: CrearAplicacionCompletaInput['candidatoData'], session?: mongoose.ClientSession): Promise<Candidato> {
-    const candidatoData: Omit<Candidato, 'id' | 'fechaCreacion' | 'fechaActualizacion'> = {
+    const candidatoData: any = {
       dni: data.dni,
       nombres: data.nombres,
       apellidoPaterno: data.apellidoPaterno,
@@ -134,7 +182,7 @@ export class AplicacionService {
     );
 
     if (hayCambios) {
-      const updateData: Partial<Omit<Candidato, 'id' | 'fechaCreacion' | 'fechaActualizacion'>> = {
+      const updateData: Partial<Candidato> = {
         nombres: nuevosDatos.nombres,
         apellidoPaterno: nuevosDatos.apellidoPaterno,
         apellidoMaterno: nuevosDatos.apellidoMaterno,
@@ -153,8 +201,19 @@ export class AplicacionService {
     return candidato;
   }
 
+  private async incrementarTotalAplicaciones(candidatoId: string, session?: mongoose.ClientSession): Promise<void> {
+    await this.candidatoRepository.incrementarTotalAplicaciones(candidatoId, session);
+  }
+
+  private async incrementarAplicacionesGanadas(candidatoId: string): Promise<void> {
+    await this.candidatoRepository.incrementarAplicacionesGanadas(candidatoId);
+  }
+
+  private async inicializarEstadisticasCandidato(candidatoId: string, session?: mongoose.ClientSession): Promise<void> {
+    await this.candidatoRepository.inicializarEstadisticas(candidatoId, session);
+  }
+
   private async guardarAplicacion(aplicacion: AplicacionCandidato, session?: mongoose.ClientSession): Promise<AplicacionCandidato> {
-    // Convertir convocatoriaId a ObjectId válido
     let convocatoriaObjectId: string;
     try {
       // Intentar convertir el ID recibido
@@ -162,7 +221,6 @@ export class AplicacionService {
       convocatoriaObjectId = aplicacion.convocatoriaId;
     } catch (error) {
       // Si no es válido, usar un ObjectId de prueba (esto es temporal para desarrollo)
-      console.warn('convocatoriaId no válido, usando ObjectId de prueba:', aplicacion.convocatoriaId);
       convocatoriaObjectId = new mongoose.Types.ObjectId().toString();
     }
 
@@ -173,6 +231,8 @@ export class AplicacionService {
       respuestasFormulario: aplicacion.respuestasFormulario || {},
       aplicadoPor: aplicacion.aplicadoPor,
       aniosExperienciaPuesto: aplicacion.aniosExperienciaPuesto,
+      aniosExperienciaGeneral: aplicacion.aniosExperienciaGeneral !== undefined ? aplicacion.aniosExperienciaGeneral : 0,
+      medioConvocatoria: aplicacion.medioConvocatoria !== undefined ? aplicacion.medioConvocatoria : 'Otro',
       pretensionEconomica: aplicacion.pretensionEconomica,
       curriculumUrl: aplicacion.curriculumUrl
     };
@@ -252,7 +312,64 @@ export class AplicacionService {
   }
 
   async cambiarEstadoKanban(id: string, estadoKanban: EstadoKanban): Promise<AplicacionCandidato> {
-    return await this.aplicacionRepository.cambiarEstadoKanban(id, estadoKanban);
+    // Obtener la aplicación antes del cambio
+    const aplicacionActual = await this.aplicacionRepository.obtenerPorId(id);
+    if (!aplicacionActual) {
+      throw new Error(`Aplicación con ID ${id} no encontrada`);
+    }
+
+    // Cambiar el estado
+    const aplicacionActualizada = await this.aplicacionRepository.cambiarEstadoKanban(id, estadoKanban);
+
+    // Si el nuevo estado es FINALIZADA, incrementar aplicacionesGanadas del candidato
+    if (estadoKanban === EstadoKanban.FINALIZADA) {
+      await this.incrementarAplicacionesGanadas(aplicacionActual.candidatoId);
+    }
+
+    return aplicacionActualizada;
+  }
+
+  async reactivarAplicacion(id: string, realizadoPor: string, realizadoPorNombre: string, motivo?: string, comentarios?: string): Promise<AplicacionCandidato> {
+    // Obtener la aplicación actual
+    const aplicacion = await this.aplicacionRepository.obtenerPorId(id);
+    if (!aplicacion) {
+      throw new Error(`Aplicación con ID ${id} no encontrada`);
+    }
+
+    // Verificar que esté en un estado archivado
+    if (aplicacion.estadoKanban !== EstadoKanban.RECHAZADO_POR_CANDIDATO && 
+        aplicacion.estadoKanban !== EstadoKanban.DESCARTADO && 
+        aplicacion.estadoKanban !== EstadoKanban.POSIBLES_CANDIDATOS) {
+      throw new Error(`Solo se pueden reactivar aplicaciones en estado RECHAZADO_POR_CANDIDATO, DESCARTADO o POSIBLES_CANDIDATOS`);
+    }
+
+    // Obtener el último cambio de estado
+    const ultimoCambio = await this.historialService.obtenerUltimoCambioEstado(id);
+    if (!ultimoCambio) {
+      throw new Error(`No se encontró historial para la aplicación ${id}`);
+    }
+
+    // El estado anterior del último cambio es donde debemos reactivar
+    const nuevoEstado = ultimoCambio.estadoAnterior;
+
+    // Cambiar el estado de la aplicación
+    const aplicacionActualizada = await this.aplicacionRepository.cambiarEstadoKanban(id, nuevoEstado);
+
+    // Registrar el cambio en el historial como REACTIVACION
+    await this.historialService.registrarCambio({
+      candidatoId: aplicacion.candidatoId,
+      aplicacionId: id,
+      estadoAnterior: aplicacion.estadoKanban, // Estado archivado actual
+      estadoNuevo: nuevoEstado, // Estado anterior al que se reactiva
+      tipoCambio: 'REACTIVACION',
+      realizadoPor,
+      realizadoPorNombre,
+      motivo: motivo || 'Reactivación desde estado archivado',
+      comentarios: comentarios || `Reactivado desde ${aplicacion.estadoKanban} a ${nuevoEstado}`,
+      tiempoEnEstadoAnterior: ultimoCambio.tiempoEnEstadoAnterior || 0
+    });
+
+    return aplicacionActualizada;
   }
 
   async eliminarAplicacion(id: string): Promise<void> {

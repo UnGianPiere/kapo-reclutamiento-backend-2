@@ -10,6 +10,7 @@ import { UsuarioResolver } from './UsuarioResolver';
 import { ConvocatoriaResolver } from './ConvocatoriaResolver';
 import { FormularioConfigResolver } from './FormularioConfigResolver';
 import { AplicacionCandidatoResolver } from './AplicacionCandidatoResolver';
+import { CandidatoResolver } from './CandidatoResolver';
 import { EntrevistaLlamadaResolver } from './EntrevistaLlamadaResolver';
 import { EntrevistaRegularResolver } from './EntrevistaRegularResolver';
 import { DebidaDiligenciaResolver } from './DebidaDiligenciaResolver';
@@ -181,7 +182,8 @@ export class ResolverFactory {
     container.register('AplicacionService', (c) => {
       const candidatoRepo = c.resolve<CandidatoMongoRepository>('CandidatoMongoRepository');
       const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
-      return new AplicacionService(candidatoRepo, aplicacionRepo);
+      const historialService = c.resolve<HistorialCandidatoService>('HistorialCandidatoService');
+      return new AplicacionService(candidatoRepo, aplicacionRepo, historialService);
     }, true);
 
     // Registrar EntrevistaLlamadaService
@@ -233,6 +235,13 @@ export class ResolverFactory {
       const candidatoService = c.resolve<CandidatoService>('CandidatoService');
       const convocatoriaService = c.resolve<ConvocatoriaService>('ConvocatoriaService');
       return new AplicacionCandidatoResolver(aplicacionService, candidatoService, convocatoriaService);
+    }, true);
+
+    // Registrar CandidatoResolver
+    container.register('CandidatoResolver', (c) => {
+      const candidatoService = c.resolve<CandidatoService>('CandidatoService');
+      const aplicacionService = c.resolve<AplicacionService>('AplicacionService');
+      return new CandidatoResolver(candidatoService, aplicacionService);
     }, true);
 
     // Registrar EntrevistaLlamadaResolver
@@ -322,6 +331,11 @@ export class ResolverFactory {
       const aplicacionCandidatoResolver = container.resolve<AplicacionCandidatoResolver>('AplicacionCandidatoResolver');
       resolvers.push(aplicacionCandidatoResolver.getResolvers());
       logger.debug('Resolver configurado: aplicacion-candidato');
+
+      // Crear CandidatoResolver
+      const candidatoResolver = container.resolve<CandidatoResolver>('CandidatoResolver');
+      resolvers.push(candidatoResolver.getResolvers());
+      logger.debug('Resolver configurado: candidato');
 
       // Crear EntrevistaLlamadaResolver
       const entrevistaLlamadaResolver = container.resolve<EntrevistaLlamadaResolver>('EntrevistaLlamadaResolver');

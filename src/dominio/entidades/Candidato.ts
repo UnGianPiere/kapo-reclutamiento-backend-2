@@ -19,6 +19,12 @@ export interface Candidato {
   curriculumUrl: string;
 
   /** Metadata */
-  fechaCreacion: Date;
+  totalAplicaciones?: number;
+  aplicacionesGanadas?: number;
+  fechaRegistro: Date;
   fechaActualizacion: Date;
+
+  /** Auditoría de cambios */
+  correosHistoricos: string[];
+  telefonosHistoricos: string[];
 }

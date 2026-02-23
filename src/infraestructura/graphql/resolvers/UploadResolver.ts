@@ -53,16 +53,6 @@ export class UploadResolver {
             async () => {
               const { files, config } = args;
               
-              // Debug: Ver qué estamos recibiendo
-              console.log('Files recibidos:', files);
-              console.log('Config recibida:', config);
-              console.log('Tipo de files:', typeof files);
-              console.log('Length de files:', files?.length);
-              if (files && files.length > 0) {
-                console.log('Primer archivo:', files[0]);
-                console.log('Keys del primer archivo:', Object.keys(files[0] || {}));
-              }
-              
               // Obtener configuración predefinida según el tipo
               const uploadConfig = this.getUploadConfigByTipo(config.tipo);
               
