@@ -13,8 +13,8 @@ type Candidato {
   telefono: String!
   lugarResidencia: String
   curriculumUrl: String!
-  fechaRegistro: DateTime!
-  fechaActualizacion: DateTime!
+  fechaRegistro: DateTime
+  fechaActualizacion: DateTime
 }
 
 type Convocatoria {
@@ -155,7 +155,7 @@ type Query {
   obtenerAplicacionesPorCandidato(candidatoId: ID!): [AplicacionCandidato!]!
   obtenerAplicacionesPorConvocatoria(convocatoriaId: ID!): [AplicacionCandidato!]!
   obtenerEstadisticasConvocatoria(convocatoriaId: ID!): EstadisticasConvocatoria!
-  getKanbanData(convocatoriaId: ID): KanbanData!
+  getKanbanData(convocatoriaId: ID, candidatoId: ID, aplicacionId: ID): KanbanData!
 }
 
 type AplicacionCandidatoConnection {

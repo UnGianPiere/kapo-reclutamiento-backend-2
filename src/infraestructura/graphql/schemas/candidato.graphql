@@ -21,8 +21,8 @@ type Candidato {
   # Metadata
   totalAplicaciones: Int!
   aplicacionesGanadas: Int
-  fechaRegistro: DateTime!
-  fechaActualizacion: DateTime!
+  fechaRegistro: DateTime
+  fechaActualizacion: DateTime
 
   # Auditoría de cambios
   correosHistoricos: [String!]!

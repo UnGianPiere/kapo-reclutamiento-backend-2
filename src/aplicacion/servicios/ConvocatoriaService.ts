@@ -20,7 +20,7 @@ export class ConvocatoriaService {
     return this.convocatoriaRepository.findById(id);
   }
 
-  async list(limit?: number, offset?: number): Promise<Convocatoria[]> {
+  async list(limit?: number, offset?: number): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
     return this.convocatoriaRepository.list(limit ?? 50, offset ?? 0);
   }
 

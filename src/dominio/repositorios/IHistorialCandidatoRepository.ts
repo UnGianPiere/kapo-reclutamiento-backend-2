@@ -41,6 +41,11 @@ export interface IHistorialCandidatoRepository {
   obtenerUltimoCambioEstado(aplicacionId: string): Promise<HistorialCandidato | null>;
 
   /**
+   * Obtener último historial de una aplicación específica
+   */
+  obtenerUltimoHistorialPorAplicacion(aplicacionId: string): Promise<HistorialCandidato | null>;
+
+  /**
    * Limpiar historial antiguo (para mantenimiento)
    */
   limpiarHistorico(fechaLimite: Date): Promise<number>;

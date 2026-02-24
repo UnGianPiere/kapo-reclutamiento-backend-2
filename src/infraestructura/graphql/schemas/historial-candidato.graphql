@@ -122,6 +122,11 @@ extend type Query {
   obtenerUltimoCambioEstado(aplicacionId: ID!): HistorialCandidato
 
   """
+  Obtener último historial de una aplicación específica
+  """
+  obtenerUltimoHistorialPorAplicacion(aplicacionId: ID!): HistorialCandidato
+
+  """
   Generar estadísticas de conversión del proceso
   """
   generarEstadisticasConversion(

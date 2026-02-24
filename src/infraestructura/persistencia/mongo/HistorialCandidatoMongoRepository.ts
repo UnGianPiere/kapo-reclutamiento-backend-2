@@ -176,6 +176,18 @@ export class HistorialCandidatoMongoRepository extends BaseMongoRepository<Histo
   }
 
   /**
+   * Obtener último historial de una aplicación específica
+   */
+  async obtenerUltimoHistorialPorAplicacion(aplicacionId: string): Promise<HistorialCandidato | null> {
+    const doc = await this.model
+      .findOne({ aplicacionId })
+      .sort({ _id: -1 }) // Ordenar por _id descendente (más reciente primero)
+      .lean();
+
+    return doc ? this.toDomain(doc) : null;
+  }
+
+  /**
    * Limpiar historial antiguo (para mantenimiento)
    */
   async limpiarHistorico(fechaLimite: Date): Promise<number> {

@@ -72,11 +72,17 @@ export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
     return doc ? this.toDomain(doc) : null;
   }
 
-  async list(limit: number = 50, offset: number = 0): Promise<Convocatoria[]> {
-    const docs = await ConvocatoriaModel.find()
-      .sort({ fecha_creacion: -1 })
-      .skip(offset)
-      .limit(limit);
-    return docs.map((d) => this.toDomain(d));
+  async list(limit: number = 50, offset: number = 0): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
+    const [docs, totalCount] = await Promise.all([
+      ConvocatoriaModel.find()
+        .sort({ fecha_creacion: -1 })
+        .skip(offset)
+        .limit(limit),
+      ConvocatoriaModel.countDocuments()
+    ]);
+    return {
+      convocatorias: docs.map((d) => this.toDomain(d)),
+      totalCount
+    };
   }
 }

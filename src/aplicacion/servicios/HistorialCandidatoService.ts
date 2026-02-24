@@ -66,10 +66,17 @@ export class HistorialCandidatoService {
   }
 
   /**
-   * Obtener último cambio de estado para una aplicación
+   * Obtener último historial de una aplicación específica
+   */
+  async obtenerUltimoHistorialPorAplicacion(aplicacionId: string): Promise<HistorialCandidato | null> {
+    return await this.historialRepository.obtenerUltimoHistorialPorAplicacion(aplicacionId);
+  }
+
+  /**
+   * Obtener último cambio de estado de una aplicación
    */
   async obtenerUltimoCambioEstado(aplicacionId: string): Promise<HistorialCandidato | null> {
-    return await this.historialRepository.obtenerUltimoCambioEstado(aplicacionId);
+    return await this.historialRepository.obtenerUltimoHistorialPorAplicacion(aplicacionId);
   }
 
   /**

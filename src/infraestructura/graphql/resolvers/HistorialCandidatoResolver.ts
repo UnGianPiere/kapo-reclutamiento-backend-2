@@ -13,6 +13,7 @@ interface IHistorialCandidatoService {
   obtenerHistorialCandidato(candidatoId: string): Promise<any>;
   listarHistorial(filtros?: any): Promise<any>;
   obtenerUltimoCambioEstado(aplicacionId: string): Promise<any>;
+  obtenerUltimoHistorialPorAplicacion(aplicacionId: string): Promise<any>;
   generarEstadisticasConversion(convocatoriaId?: string, fechaDesde?: Date, fechaHasta?: Date): Promise<any>;
   registrarCambio(input: any): Promise<any>;
   limpiarHistorico(fechaLimite: Date): Promise<number>;
@@ -52,6 +53,14 @@ export class HistorialCandidatoResolver {
           return await ErrorHandler.handleError(
             () => this.historialService.obtenerUltimoCambioEstado(aplicacionId),
             'obtenerUltimoCambioEstado',
+            { aplicacionId }
+          );
+        },
+
+        obtenerUltimoHistorialPorAplicacion: async (_: any, { aplicacionId }: { aplicacionId: string }) => {
+          return await ErrorHandler.handleError(
+            () => this.historialService.obtenerUltimoHistorialPorAplicacion(aplicacionId),
+            'obtenerUltimoHistorialPorAplicacion',
             { aplicacionId }
           );
         },

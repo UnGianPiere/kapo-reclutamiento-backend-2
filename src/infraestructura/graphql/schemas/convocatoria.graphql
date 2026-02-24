@@ -56,10 +56,15 @@ input RecibirConvocatoriaInput {
   detalle_staff_snapshot: JSON
 }
 
+type ConvocatoriaConnection {
+  convocatorias: [Convocatoria!]!
+  totalCount: Int!
+}
+
 extend type Query {
   convocatoria(id: ID!): Convocatoria
   convocatoriaPorRequerimientoPersonalId(requerimientoPersonalId: String!): Convocatoria
-  convocatorias(limit: Int, offset: Int): [Convocatoria!]!
+  convocatorias(limit: Int, offset: Int): ConvocatoriaConnection!
 }
 
 extend type Mutation {
