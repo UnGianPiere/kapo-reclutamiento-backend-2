@@ -1,6 +1,7 @@
-import { IPersonalRepository } from '../../../dominio/repositorios/IPersonalRepository';
+import { IPersonalRepository, CrearEmpleadoInput } from '../../../dominio/repositorios/IPersonalRepository';
 import { Personal, PersonalFilterInput, PersonalReferenciasInput, PersonalPaginadoResult } from '../../../dominio/entidades/Personal';
 import { BaseHttpRepository } from './BaseHttpRepository';
+import { GraphQLClient } from '../../http/GraphQLClient';
 import { logger } from '../../logging';
 
 export class HttpPersonalRepository extends BaseHttpRepository<Personal> implements IPersonalRepository {
@@ -11,8 +12,24 @@ export class HttpPersonalRepository extends BaseHttpRepository<Personal> impleme
   /**
    * Obtener o inicializar el cliente GraphQL para el servicio PERSONAL
    */
-  protected override async getClient() {
-    return super.getClient('personal-backend');
+  protected override async getClient(_serviceName?: string, _fallbackServiceName?: string): Promise<GraphQLClient> {
+    if (this.client) {
+      return this.client;
+    }
+
+    if (this.baseUrl) {
+      this.client = new GraphQLClient(this.baseUrl);
+      return this.client;
+    }
+
+    try {
+      const url = await this.serviceRegistry.getServiceUrl('personal-backend');
+      this.client = new GraphQLClient(url);
+      return this.client;
+    } catch (error) {
+      logger.error('No se pudo obtener el servicio personal-backend', { error });
+      throw new Error('Servicio personal-backend no disponible');
+    }
   }
 
   /**
@@ -260,5 +277,96 @@ export class HttpPersonalRepository extends BaseHttpRepository<Personal> impleme
    */
   async delete(_id: string): Promise<boolean> {
     throw new Error('Eliminar empleado no está implementado en este repositorio');
+  }
+
+  /**
+   * Buscar empleado por DNI en el sistema PERSONAL
+   */
+  async buscarPorDNI(dni: string): Promise<any | null> {
+    console.log(`[HTTP_PERSONAL_REPO] Buscando empleado con DNI exacto: "${dni}"`);
+    
+    const query = `
+      query getEmpleadosPaginados($page: Int, $limit: Int, $filter: EmpleadoFilterInput) {
+        empleadosPaginados(page: $page, limit: $limit, filter: $filter) {
+          data {
+            id
+            dni
+            nombres
+            ap_paterno
+            ap_materno
+          }
+          total
+          page
+          limit
+          totalPages
+        }
+      }
+    `;
+
+    try {
+      const response = await this.graphqlRequest(query, {
+        page: 1,
+        limit: 1,
+        filter: { search: dni.trim() }  // Usar search con DNI exacto (el único campo disponible)
+      }, 'personal-backend');
+      
+      console.log(`[HTTP_PERSONAL_REPO] Respuesta de PERSONAL:`, response);
+      
+      const empleados = response.empleadosPaginados?.data || [];
+      console.log(`[HTTP_PERSONAL_REPO] Empleados encontrados: ${empleados.length}`);
+      
+      // Filtrar por DNI exacto después de la búsqueda
+      const empleadoExacto = empleados.find((emp: { dni: string }) => emp.dni === dni.trim());
+      console.log(`[HTTP_PERSONAL_REPO] Empleado con DNI exacto:`, empleadoExacto);
+      
+      if (empleadoExacto) {
+        return empleadoExacto;
+      }
+      
+      console.log(`[HTTP_PERSONAL_REPO] No se encontró empleado con DNI exacto: ${dni}`);
+      return null;
+    } catch (error) {
+      logger.error('Error buscando empleado por DNI en PERSONAL', { error, dni });
+      console.log('🚫 [HTTP-PERSONAL] Error en búsqueda:', error)
+      return null;
+    }
+  }
+
+  /**
+   * Crear un nuevo empleado en el sistema PERSONAL
+   */
+  async crearEmpleado(input: CrearEmpleadoInput): Promise<string> {
+    console.log('🚀 [HTTP-PERSONAL] Iniciando crearEmpleado')
+    console.log('📝 [HTTP-PERSONAL] Input:', JSON.stringify(input, null, 2))
+    console.log('🔗 [HTTP-PERSONAL] Endpoint: personal-backend')
+    
+    const mutation = `
+      mutation createEmpleadoCH($input: CreateEmpleadoCHInput!) {
+        createEmpleadoCH(input: $input) {
+          id
+        }
+      }
+    `;
+
+    try {
+      console.log('📡 [HTTP-PERSONAL] Ejecutando this.graphqlRequest')
+      const startTime = Date.now()
+      const response = await this.graphqlRequest(mutation, { input }, 'personal-backend');
+      const endTime = Date.now()
+      
+      console.log('✅ [HTTP-PERSONAL] graphqlRequest completado')
+      console.log('⏱️ [HTTP-PERSONAL] Duración:', endTime - startTime, 'ms')
+      console.log('📦 [HTTP-PERSONAL] Response:', JSON.stringify(response, null, 2))
+      
+      const empleadoId = response.createEmpleadoCH.id;
+      console.log('🆔 [HTTP-PERSONAL] Empleado ID retornado:', empleadoId)
+      
+      return empleadoId;
+    } catch (error) {
+      console.log('❌ [HTTP-PERSONAL] Error en crearEmpleado:', error)
+      const errorMessage = (error as Error).message;
+      logger.error('Error creando empleado en PERSONAL', { error, input });
+      throw new Error(`Error creando empleado: ${errorMessage}`);
+    }
   }
 }

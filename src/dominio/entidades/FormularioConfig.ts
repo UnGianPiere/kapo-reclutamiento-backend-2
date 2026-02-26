@@ -159,7 +159,10 @@ export const CAMPOS_REQUERIDOS_BASE: ICampoFormulario[] = [
     requerido: true,
     habilitado: true,
     orden: 6,
-    placeholder: '+51 XXX XXX XXX'
+    placeholder: 'XXX XXX XXX',
+    validaciones: {
+      maxLength: 9
+    }
   },
   {
     id: 'medio_convocatoria',
@@ -170,12 +173,11 @@ export const CAMPOS_REQUERIDOS_BASE: ICampoFormulario[] = [
     habilitado: true,
     orden: 7,
     opciones: [
-      'Redes Sociales',
-      'Sitio Web de la Empresa',
-      'Referencia de un conocido',
-      'Bolsa de trabajo',
-      'LinkedIn',
-      'Otro'
+      'COMPUTRABAJO',
+      'INDEED',
+      'LINKEDIN',
+      'REDES SOCIALES',
+      'OTROS'
     ]
   },
   {
@@ -217,7 +219,7 @@ export const CAMPOS_REQUERIDOS_BASE: ICampoFormulario[] = [
     requerido: true,
     habilitado: true,
     orden: 11,
-    placeholder: 'Ciudad, Provincia'
+    placeholder: 'Ej: Av. Los Próceres 123, Dpto 402'
   },
   {
     id: 'curriculum',

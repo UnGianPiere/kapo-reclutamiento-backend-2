@@ -35,7 +35,7 @@ export interface IAplicacionCandidatoRepository {
   /**
    * Actualizar aplicación
    */
-  actualizar(id: string, input: ActualizarAplicacionInput): Promise<AplicacionCandidato>;
+  actualizar(id: string, input: ActualizarAplicacionInput, session?: mongoose.ClientSession): Promise<AplicacionCandidato>;
 
   /**
    * Cambiar estado de aplicación en el kanban

@@ -5,8 +5,11 @@ import { AplicacionCandidato, CrearAplicacionInput, ActualizarAplicacionInput } 
 import { Candidato } from '../../dominio/entidades/Candidato';
 import { EstadoKanban } from '../../dominio/entidades/EstadoKanban';
 import { ICandidatoRepository } from '../../dominio/repositorios/ICandidatoRepository';
-import { IAplicacionCandidatoRepository } from '../../dominio/repositorios/IAplicacionCandidatoRepository';
+import { IConvocatoriaRepository } from '../../dominio/repositorios/IConvocatoriaRepository';
+import { PersonalService } from './PersonalService';
 import { HistorialCandidatoService } from './HistorialCandidatoService';
+import { IAplicacionCandidatoRepository } from '../../dominio/repositorios/IAplicacionCandidatoRepository';
+import { CrearEmpleadoInput } from '../../dominio/repositorios/IPersonalRepository';
 import mongoose from 'mongoose';
 
 export interface CrearAplicacionCompletaInput {
@@ -36,6 +39,8 @@ export class AplicacionService {
   constructor(
     private readonly candidatoRepository: ICandidatoRepository,
     private readonly aplicacionRepository: IAplicacionCandidatoRepository,
+    private readonly convocatoriaRepository: IConvocatoriaRepository,
+    private readonly personalService: PersonalService,
     private readonly historialService: HistorialCandidatoService
   ) {}
 
@@ -205,10 +210,6 @@ export class AplicacionService {
     await this.candidatoRepository.incrementarTotalAplicaciones(candidatoId, session);
   }
 
-  private async incrementarAplicacionesGanadas(candidatoId: string): Promise<void> {
-    await this.candidatoRepository.incrementarAplicacionesGanadas(candidatoId);
-  }
-
   private async inicializarEstadisticasCandidato(candidatoId: string, session?: mongoose.ClientSession): Promise<void> {
     await this.candidatoRepository.inicializarEstadisticas(candidatoId, session);
   }
@@ -321,11 +322,6 @@ export class AplicacionService {
     // Cambiar el estado
     const aplicacionActualizada = await this.aplicacionRepository.cambiarEstadoKanban(id, estadoKanban);
 
-    // Si el nuevo estado es FINALIZADA, incrementar aplicacionesGanadas del candidato
-    if (estadoKanban === EstadoKanban.FINALIZADA) {
-      await this.incrementarAplicacionesGanadas(aplicacionActual.candidatoId);
-    }
-
     return aplicacionActualizada;
   }
 
@@ -343,14 +339,30 @@ export class AplicacionService {
       throw new Error(`Solo se pueden reactivar aplicaciones en estado RECHAZADO_POR_CANDIDATO, DESCARTADO o POSIBLES_CANDIDATOS`);
     }
 
-    // Obtener el último cambio de estado
-    const ultimoCambio = await this.historialService.obtenerUltimoCambioEstado(id);
-    if (!ultimoCambio) {
+    // Obtener el historial completo para encontrar el último estado no archivado
+    const historial = await this.historialService.obtenerHistorialAplicacion(id);
+    if (!historial || historial.length === 0) {
       throw new Error(`No se encontró historial para la aplicación ${id}`);
     }
 
-    // El estado anterior del último cambio es donde debemos reactivar
-    const nuevoEstado = ultimoCambio.estadoAnterior;
+    // Estados archivados que debemos saltar
+    const estadosArchivados = [EstadoKanban.RECHAZADO_POR_CANDIDATO, EstadoKanban.DESCARTADO, EstadoKanban.POSIBLES_CANDIDATOS];
+
+    // Encontrar el último estadoAnterior que no sea archivado
+    // Ordenar historial por fecha descendente (más reciente primero)
+    const historialOrdenado = historial.sort((a: any, b: any) => new Date(b.fechaCambio).getTime() - new Date(a.fechaCambio).getTime());
+    
+    let nuevoEstado: EstadoKanban | null = null;
+    for (const cambio of historialOrdenado) {
+      if (!estadosArchivados.includes(cambio.estadoAnterior as EstadoKanban)) {
+        nuevoEstado = cambio.estadoAnterior as EstadoKanban;
+        break;
+      }
+    }
+
+    if (!nuevoEstado) {
+      throw new Error(`No se encontró un estado válido para reactivar la aplicación ${id}`);
+    }
 
     // Cambiar el estado de la aplicación
     const aplicacionActualizada = await this.aplicacionRepository.cambiarEstadoKanban(id, nuevoEstado);
@@ -360,13 +372,13 @@ export class AplicacionService {
       candidatoId: aplicacion.candidatoId,
       aplicacionId: id,
       estadoAnterior: aplicacion.estadoKanban, // Estado archivado actual
-      estadoNuevo: nuevoEstado, // Estado anterior al que se reactiva
+      estadoNuevo: nuevoEstado, // Estado anterior no archivado al que se reactiva
       tipoCambio: 'REACTIVACION',
       realizadoPor,
       realizadoPorNombre,
       motivo: motivo || 'Reactivación desde estado archivado',
       comentarios: comentarios || `Reactivado desde ${aplicacion.estadoKanban} a ${nuevoEstado}`,
-      tiempoEnEstadoAnterior: ultimoCambio.tiempoEnEstadoAnterior || 0
+      tiempoEnEstadoAnterior: 0 // No aplicable para reactivación
     });
 
     return aplicacionActualizada;
@@ -374,5 +386,202 @@ export class AplicacionService {
 
   async eliminarAplicacion(id: string): Promise<void> {
     return await this.aplicacionRepository.eliminar(id);
+  }
+
+  /**
+   * Finalizar candidato: crear empleado en PERSONAL, actualizar candidato y convocatoria
+   * Optimizado con procesamiento paralelo y caché en memoria
+   */
+  async finalizarCandidato(aplicacionId: string, usuarioId?: string): Promise<{
+    aplicacion: any;
+    candidato: any;
+    convocatoria: any;
+    personalId: string;
+  }> {
+    console.log(`🔍 [SERVICE] finalizarCandidato llamado con aplicacionId: ${aplicacionId} - Timestamp: ${new Date().toISOString()}`);
+    console.trace('📍 [SERVICE] Stack trace de llamada a finalizarCandidato');
+    
+    const session = await mongoose.startSession();
+    console.log(`[FINALIZAR_CANDIDATO] Iniciando proceso optimizado para aplicación ID: ${aplicacionId}`);
+    console.log(`🔍 [SESSION] Session ID: ${session.id}`);
+    console.log(`🔍 [SESSION] Session inTransaction: ${session.inTransaction}`);
+
+    try {
+      const resultado = await session.withTransaction(async () => {
+        console.log(`🔄 [TRANSACTION] Iniciando transacción para aplicación ID: ${aplicacionId}`);
+        console.log(`🔍 [TRANSACTION] Session inTransaction: ${session.inTransaction}`);
+        console.trace('📍 [TRANSACTION] Stack trace dentro de transacción');
+        
+        // Verificar si ya está finalizado para evitar doble ejecución en la transacción
+        const aplicacionCheck = await this.aplicacionRepository.obtenerPorId(aplicacionId);
+        if (aplicacionCheck?.procesoFinalizadoCompleto) {
+          console.log(`⚠️ [TRANSACTION] Aplicación ya finalizada, evitando doble ejecución`);
+          const candidato = await this.candidatoRepository.obtenerPorId(aplicacionCheck.candidatoId.toString());
+          const convocatoria = await this.convocatoriaRepository.findById(aplicacionCheck.convocatoriaId.toString());
+          
+          return {
+            aplicacion: aplicacionCheck,
+            candidato,
+            convocatoria,
+            personalId: candidato?.personal_id || ''
+          };
+        }
+        
+        // 1. Obtener aplicación, candidato y convocatoria en paralelo
+        console.log(`[FINALIZAR_CANDIDATO] Paso 1: Obteniendo datos en paralelo`);
+        
+        const aplicacionPromise = this.aplicacionRepository.obtenerPorId(aplicacionId);
+        const aplicacion = await aplicacionPromise;
+        
+        if (!aplicacion) {
+          throw new Error('Aplicación no encontrada');
+        }
+
+        console.log(`[FINALIZAR_CANDIDATO] Estado de finalización actual: procesoFinalizadoCompleto=${aplicacion.procesoFinalizadoCompleto}, fechaFinalizacionProceso=${aplicacion.fechaFinalizacionProceso}`);
+
+        // Obtener candidato para verificar si ya tiene personal_id
+        const candidatoCheck = await this.candidatoRepository.obtenerPorId(aplicacion.candidatoId.toString());
+        console.log(`[FINALIZAR_CANDIDATO] Candidato personal_id actual: ${candidatoCheck?.personal_id}`);
+
+        // Verificar si ya está finalizada (solo por personal_id del candidato, que es committed)
+        if (candidatoCheck?.personal_id) {
+          console.log(`[FINALIZAR_CANDIDATO] Candidato ya tiene empleado asignado (personal_id: ${candidatoCheck.personal_id}), omitiendo proceso`);
+          // Retornar datos existentes
+          const convocatoria = await this.convocatoriaRepository.findById(aplicacion.convocatoriaId.toString());
+          
+          return {
+            aplicacion,
+            candidato: candidatoCheck,
+            convocatoria,
+            personalId: candidatoCheck.personal_id
+          };
+        }
+
+        console.log(`[FINALIZAR_CANDIDATO] Aplicación no está finalizada, procediendo con el proceso`);
+
+        // Obtener candidato y convocatoria en paralelo
+        const [candidato, convocatoria] = await Promise.all([
+          this.candidatoRepository.obtenerPorId(aplicacion.candidatoId.toString()),
+          this.convocatoriaRepository.findById(aplicacion.convocatoriaId.toString())
+        ]);
+
+        if (!candidato) {
+          throw new Error('Candidato no encontrado');
+        }
+        if (!convocatoria) {
+          throw new Error('Convocatoria no encontrada');
+        }
+
+        console.log(`[FINALIZAR_CANDIDATO] Datos obtenidos en paralelo:`, {
+          aplicacion: { id: aplicacion.id, estadoKanban: aplicacion.estadoKanban },
+          candidato: { id: candidato.id, dni: candidato.dni, nombres: candidato.nombres },
+          convocatoria: { id: convocatoria.id, codigo: convocatoria.codigo_convocatoria }
+        });
+
+        // 2. Preparar datos para empleado en PERSONAL (procesamiento ligero)
+        console.log(`[FINALIZAR_CANDIDATO] Paso 2: Preparando datos para PERSONAL`);
+        const empleadoInput: CrearEmpleadoInput = {
+          dni: candidato.dni,
+          nombres: candidato.nombres,
+          ap_paterno: candidato.apellidoPaterno,
+          ap_materno: candidato.apellidoMaterno,
+        };
+
+        // Validaciones y asignaciones condicionales (procesamiento optimizado)
+        if (candidato.telefono && candidato.telefono.length === 9) {
+          empleadoInput.celular = candidato.telefono;
+        }
+        if (candidato.correo) {
+          empleadoInput.correo_personal = candidato.correo;
+        }
+        if (candidato.lugarResidencia) {
+          empleadoInput.direccion = candidato.lugarResidencia;
+        }
+        if (convocatoria.codigo_convocatoria) {
+          empleadoInput.requerimiento_asignado_codigo = convocatoria.codigo_convocatoria;
+        }
+        if (usuarioId) {
+          empleadoInput.usuario_id = usuarioId;
+        }
+
+        let personalId: string;
+
+        // 3. Crear empleado directamente en PERSONAL (confiar en el rollback si hay duplicados)
+        console.log(`[FINALIZAR_CANDIDATO] Paso 3: Creando empleado en PERSONAL`);
+        personalId = await this.personalService.crearEmpleado(empleadoInput);
+        console.log(`[FINALIZAR_CANDIDATO] Empleado creado: ${personalId}`);
+
+        // 4. Preparar actualizaciones en memoria (procesamiento optimizado)
+        console.log(`[FINALIZAR_CANDIDATO] Paso 5: Preparando actualizaciones en memoria`);
+        
+        const ganadoresIds = [...(convocatoria.ganadores_ids || []), candidato.id];
+        const estadoFinal = ganadoresIds.length >= convocatoria.vacantes ? 'FINALIZADA' : convocatoria.estado_convocatoria;
+        
+        const convocatoriaActualizada = {
+          ...convocatoria,
+          ganadores_ids: ganadoresIds,
+          estado_convocatoria: estadoFinal
+        };
+        
+        // 6. Actualizar BD en secuencia (no en paralelo para evitar conflictos de transacción)
+        console.log(`[FINALIZAR_CANDIDATO] Paso 6: Actualizando BD en secuencia`);
+        
+        const aplicacionActualizada = await this.aplicacionRepository.actualizar(aplicacion.id, {
+          estadoKanban: EstadoKanban.FINALIZADA,
+          procesoFinalizadoCompleto: true,
+          fechaFinalizacionProceso: new Date()
+        }, session);
+        
+        const candidatoActualizadoDb = await this.candidatoRepository.actualizar(candidato.id, {
+          personal_id: personalId,
+          aplicacionesGanadas: (candidato.aplicacionesGanadas || 0) + 1,
+          convocatorias_ganadas: [...(candidato.convocatorias_ganadas || []), convocatoria.id]
+        }, session);
+        
+        const convocatoriaActualizadaDb = await this.convocatoriaRepository.actualizar(convocatoria.id, convocatoriaActualizada, session);
+        
+        console.log(`[FINALIZAR_CANDIDATO] BD actualizada exitosamente`);
+        
+        // 6. Retornar resultado
+        const resultado = {
+          aplicacion: aplicacionActualizada,
+          candidato: candidatoActualizadoDb,
+          convocatoria: convocatoriaActualizadaDb,
+          personalId
+        };
+        
+        console.log(`[FINALIZAR_CANDIDATO] ✅ Proceso completado exitosamente`);
+        return resultado;
+      });
+
+      console.log(`[FINALIZAR_CANDIDATO] ✅ Proceso optimizado completado`);
+      console.log(`[FINALIZAR_CANDIDATO] Resumen:`, {
+        personalId: resultado.personalId,
+        tiempo_total: 'optimizado'
+      });
+
+      return resultado;
+    } catch (error) {
+      console.error(`[FINALIZAR_CANDIDATO] ❌ Error en proceso optimizado:`, error);
+      console.log(`🔍 [ERROR] Session ID: ${session.id}`);
+      console.log(`🔍 [ERROR] Session inTransaction: ${session.inTransaction}`);
+      console.trace('📍 [ERROR] Stack trace del error en finalizarCandidato');
+      
+      // Analizar el tipo de error para identificar retry de MongoDB
+      if (error instanceof Error) {
+        if (error.message.includes('WriteConflict') || error.message.includes('TransientTransactionError')) {
+          console.log(`🔄 [ERROR] Error de transacción MongoDB detectado: ${error.message}`);
+        }
+        if (error.message.includes('duplicate key')) {
+          console.log(`🔄 [ERROR] Error de clave duplicada detectado: ${error.message}`);
+        }
+      }
+      
+      throw error;
+    } finally {
+      await session.endSession();
+      console.log(`[FINALIZAR_CANDIDATO] Sesión cerrada`);
+      console.log(`🔍 [FINALLY] Session ID: ${session.id}`);
+    }
   }
 }

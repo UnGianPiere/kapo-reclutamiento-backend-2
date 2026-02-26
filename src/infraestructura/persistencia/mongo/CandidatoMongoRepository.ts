@@ -32,6 +32,8 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
       curriculumUrl: doc.curriculumUrl,
       totalAplicaciones: doc.totalAplicaciones || 0,
       aplicacionesGanadas: doc.aplicacionesGanadas || 0,
+      personal_id: doc.personal_id,
+      convocatorias_ganadas: doc.convocatorias_ganadas || [],
       fechaRegistro: doc.createdAt,
       fechaActualizacion: doc.updatedAt,
       correosHistoricos: doc.correosHistoricos || [],
@@ -107,6 +109,9 @@ export class CandidatoMongoRepository extends BaseMongoRepository<Candidato> imp
     if (datos.telefono !== undefined) existingDoc.telefono = datos.telefono;
     if (datos.lugarResidencia !== undefined) existingDoc.lugarResidencia = datos.lugarResidencia;
     if (datos.curriculumUrl !== undefined) existingDoc.curriculumUrl = datos.curriculumUrl;
+    if (datos.personal_id !== undefined) existingDoc.personal_id = datos.personal_id;
+    if (datos.aplicacionesGanadas !== undefined) existingDoc.aplicacionesGanadas = datos.aplicacionesGanadas;
+    if (datos.convocatorias_ganadas !== undefined) existingDoc.convocatorias_ganadas = datos.convocatorias_ganadas;
 
     // Guardar con session
     const doc = await existingDoc.save(session ? { session } : undefined);

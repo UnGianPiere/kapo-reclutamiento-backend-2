@@ -21,6 +21,8 @@ export interface Candidato {
   /** Metadata */
   totalAplicaciones?: number;
   aplicacionesGanadas?: number;
+  personal_id?: string;
+  convocatorias_ganadas?: string[];
   fechaRegistro: Date;
   fechaActualizacion: Date;
 

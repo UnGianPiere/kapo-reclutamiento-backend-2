@@ -8,7 +8,7 @@ import {
   PersonalReferenciasInput,
   PersonalPaginadoResult
 } from '../../dominio/entidades/Personal';
-import { IPersonalRepository } from '../../dominio/repositorios/IPersonalRepository';
+import { IPersonalRepository, CrearEmpleadoInput } from '../../dominio/repositorios/IPersonalRepository';
 
 /**
  * Servicio para consumir el endpoint empleadosPaginados del sistema PERSONAL/Personal
@@ -53,4 +53,20 @@ export class PersonalService {
     return await this.personalRepository.obtenerEmpleadosDisponibles(page, limit);
   }
 
+  /**
+   * Crear un nuevo empleado en el sistema PERSONAL
+   */
+  async crearEmpleado(input: CrearEmpleadoInput): Promise<string> {
+    console.log(`🔍 [PERSONAL_SERVICE] crearEmpleado llamado con DNI: ${input.dni} - Timestamp: ${new Date().toISOString()}`);
+    console.trace('📍 [PERSONAL_SERVICE] Stack trace de llamada a crearEmpleado');
+    
+    return await this.personalRepository.crearEmpleado(input);
+  }
+
+  /**
+   * Buscar empleado por DNI en el sistema PERSONAL
+   */
+  async buscarPorDNI(dni: string): Promise<any | null> {
+    return await (this.personalRepository as any).buscarPorDNI(dni);
+  }
 }

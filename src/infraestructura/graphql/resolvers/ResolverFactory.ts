@@ -182,8 +182,10 @@ export class ResolverFactory {
     container.register('AplicacionService', (c) => {
       const candidatoRepo = c.resolve<CandidatoMongoRepository>('CandidatoMongoRepository');
       const aplicacionRepo = c.resolve<AplicacionCandidatoMongoRepository>('AplicacionCandidatoMongoRepository');
+      const convocatoriaRepo = c.resolve<ConvocatoriaMongoRepository>('ConvocatoriaMongoRepository');
+      const personalService = c.resolve<PersonalService>('PersonalService');
       const historialService = c.resolve<HistorialCandidatoService>('HistorialCandidatoService');
-      return new AplicacionService(candidatoRepo, aplicacionRepo, historialService);
+      return new AplicacionService(candidatoRepo, aplicacionRepo, convocatoriaRepo, personalService, historialService);
     }, true);
 
     // Registrar EntrevistaLlamadaService

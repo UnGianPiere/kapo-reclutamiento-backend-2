@@ -36,6 +36,7 @@ type Convocatoria {
   token_formulario: String
   fecha_creacion: DateTime!
   fecha_actualizacion: DateTime!
+  ganadores_ids: [String!]!
 }
 
 input RecibirConvocatoriaInput {
@@ -54,6 +55,7 @@ input RecibirConvocatoriaInput {
   obra_id: String
   empresa_id: String
   detalle_staff_snapshot: JSON
+  ganadores_ids: [String!]
 }
 
 type ConvocatoriaConnection {

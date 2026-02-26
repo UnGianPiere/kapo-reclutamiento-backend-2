@@ -45,4 +45,16 @@ export class CandidatoService {
   async eliminarCandidato(id: string): Promise<void> {
     return await this.candidatoRepository.eliminar(id);
   }
+
+  async incrementarTotalAplicaciones(id: string, session?: mongoose.ClientSession): Promise<void> {
+    return await this.candidatoRepository.incrementarTotalAplicaciones(id, session);
+  }
+
+  async incrementarAplicacionesGanadas(id: string, session?: mongoose.ClientSession): Promise<void> {
+    return await this.candidatoRepository.incrementarAplicacionesGanadas(id, session);
+  }
+
+  async inicializarEstadisticas(id: string, session?: mongoose.ClientSession): Promise<void> {
+    return await this.candidatoRepository.inicializarEstadisticas(id, session);
+  }
 }

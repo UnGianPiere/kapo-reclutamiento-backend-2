@@ -5,6 +5,7 @@
 import { ConvocatoriaModel } from './schemas/ConvocatoriaSchema';
 import { IConvocatoriaRepository } from '../../../dominio/repositorios/IConvocatoriaRepository';
 import { Convocatoria, RecibirConvocatoriaInput } from '../../../dominio/entidades/Convocatoria';
+import mongoose from 'mongoose';
 
 export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
   private toDomain(doc: any): Convocatoria {
@@ -30,6 +31,7 @@ export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
       token_formulario: doc.token_formulario,
       fecha_creacion: doc.fecha_creacion,
       fecha_actualizacion: doc.fecha_actualizacion,
+      ganadores_ids: doc.ganadores_ids,
     };
   }
 
@@ -52,6 +54,7 @@ export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
       empresa_id: input.empresa_id,
       detalle_staff_snapshot: input.detalle_staff_snapshot,
       fecha_actualizacion: now,
+      ganadores_ids: input.ganadores_ids || [],
     };
 
     const doc = await ConvocatoriaModel.findOneAndUpdate(
@@ -72,17 +75,34 @@ export class ConvocatoriaMongoRepository implements IConvocatoriaRepository {
     return doc ? this.toDomain(doc) : null;
   }
 
-  async list(limit: number = 50, offset: number = 0): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
+  async list(limit?: number, offset?: number): Promise<{ convocatorias: Convocatoria[]; totalCount: number }> {
     const [docs, totalCount] = await Promise.all([
       ConvocatoriaModel.find()
         .sort({ fecha_creacion: -1 })
-        .skip(offset)
-        .limit(limit),
+        .skip(offset ?? 0)
+        .limit(limit ?? 50),
       ConvocatoriaModel.countDocuments()
     ]);
     return {
       convocatorias: docs.map((d) => this.toDomain(d)),
       totalCount
     };
+  }
+
+  async actualizar(id: string, datos: Partial<Convocatoria>, session?: mongoose.ClientSession): Promise<Convocatoria> {
+    const updatedDoc = await this.update(id, datos, session);
+    if (!updatedDoc) {
+      throw new Error(`Convocatoria con id ${id} no encontrada`);
+    }
+    return updatedDoc;
+  }
+
+  private async update(id: string, datos: Partial<Convocatoria>, session?: mongoose.ClientSession): Promise<Convocatoria | null> {
+    const doc = await ConvocatoriaModel.findByIdAndUpdate(
+      id, 
+      { $set: datos }, 
+      { new: true, session: session || null }
+    );
+    return doc ? this.toDomain(doc) : null;
   }
 }

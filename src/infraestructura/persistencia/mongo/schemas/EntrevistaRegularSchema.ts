@@ -1,10 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { TipoEntrevista } from '../../../../dominio/entidades/EntrevistaRegular';
+import { TipoEntrevista, ModalidadEntrevista } from '../../../../dominio/entidades/EntrevistaRegular';
 
 export interface EntrevistaRegularDocument extends Document {
   aplicacionCandidatoId: mongoose.Types.ObjectId;
   candidatoId: mongoose.Types.ObjectId;
   tipo_entrevista: TipoEntrevista;
+  modalidad: ModalidadEntrevista;
   fecha_entrevista: Date;
   hora_entrevista: string;
   correo_contacto: string;
@@ -33,6 +34,12 @@ const EntrevistaRegularSchema = new Schema<EntrevistaRegularDocument>({
     type: String,
     enum: ['PRIMERA', 'SEGUNDA'],
     required: true
+  },
+
+  modalidad: {
+    type: String,
+    enum: ['PRESENCIAL', 'VIRTUAL'],
+    required: false
   },
 
   fecha_entrevista: {

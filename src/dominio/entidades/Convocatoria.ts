@@ -30,6 +30,7 @@ export interface Convocatoria {
   token_formulario?: string;
   fecha_creacion: Date;
   fecha_actualizacion: Date;
+  ganadores_ids: string[];
 }
 
 export interface RecibirConvocatoriaInput {
@@ -48,4 +49,5 @@ export interface RecibirConvocatoriaInput {
   obra_id?: string;
   empresa_id?: string;
   detalle_staff_snapshot?: Record<string, unknown>;
+  ganadores_ids?: string[];
 }

@@ -15,6 +15,9 @@ type Candidato {
   curriculumUrl: String!
   fechaRegistro: DateTime
   fechaActualizacion: DateTime
+  personal_id: String
+  aplicacionesGanadas: Int
+  convocatorias_ganadas: [String!]
 }
 
 type Convocatoria {
@@ -70,6 +73,10 @@ type AplicacionCandidato {
   esRepostulacion: Boolean!
   esPosibleCandidatoActivado: Boolean!
   aplicacionPrincipalRechazadaId: ID
+
+  # Estado del proceso de finalización
+  procesoFinalizadoCompleto: Boolean
+  fechaFinalizacionProceso: DateTime
 }
 
 enum EstadoKanban {
@@ -193,6 +200,15 @@ type KanbanData {
   POSIBLES_CANDIDATOS: KanbanColumnData!
 }
 
+# Tipos para resultado de finalizar candidato
+type FinalizarCandidatoResult {
+  success: Boolean!
+  aplicacion: AplicacionCandidato!
+  candidato: Candidato!
+  convocatoria: Convocatoria!
+  personalId: String!
+}
+
 # Mutations
 type Mutation {
   crearAplicacion(input: CrearAplicacionCompletaInput!): AplicacionCandidato!
@@ -200,4 +216,5 @@ type Mutation {
   cambiarEstadoKanban(id: ID!, estadoKanban: EstadoKanban!): AplicacionCandidato!
   reactivarAplicacion(id: ID!, realizadoPor: ID!, realizadoPorNombre: String!, motivo: String, comentarios: String): AplicacionCandidato!
   eliminarAplicacion(id: ID!): Boolean!
+  finalizarCandidato(aplicacionId: ID!, usuarioId: ID): FinalizarCandidatoResult!
 }

@@ -25,6 +25,7 @@ export interface IConvocatoriaDocument extends Document {
   token_formulario?: string;
   fecha_creacion: Date;
   fecha_actualizacion: Date;
+  ganadores_ids: string[];
 }
 
 const ConvocatoriaSchema = new Schema<IConvocatoriaDocument>(
@@ -49,6 +50,7 @@ const ConvocatoriaSchema = new Schema<IConvocatoriaDocument>(
     token_formulario: { type: String, trim: true },
     fecha_creacion: { type: Date, default: Date.now },
     fecha_actualizacion: { type: Date, default: Date.now },
+    ganadores_ids: { type: [String], default: [] },
   },
   { collection: 'convocatorias', timestamps: false }
 );

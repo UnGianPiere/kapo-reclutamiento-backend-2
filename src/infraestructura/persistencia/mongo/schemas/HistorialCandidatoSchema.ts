@@ -66,7 +66,7 @@ const HistorialCandidatoSchema = new Schema<IHistorialCandidatoDocument>({
   tipoCambio: {
     type: String,
     required: true,
-    enum: ['APROBACION', 'RECHAZO', 'MOVIMIENTO', 'REACTIVACION'],
+    enum: ['APROBACION', 'RECHAZO', 'MOVIMIENTO', 'REACTIVACION', 'FINALIZADO'],
     index: true
   },
 

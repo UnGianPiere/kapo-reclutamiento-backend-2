@@ -42,6 +42,7 @@ enum TipoCambioHistorial {
   RECHAZO
   MOVIMIENTO
   REACTIVACION
+  FINALIZADO
 }
 
 """

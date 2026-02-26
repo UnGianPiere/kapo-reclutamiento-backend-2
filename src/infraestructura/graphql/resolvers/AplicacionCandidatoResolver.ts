@@ -183,6 +183,25 @@ export class AplicacionCandidatoResolver {
             'eliminarAplicacion',
             args
           );
+        },
+        finalizarCandidato: async (_: unknown, args: { aplicacionId: string; usuarioId?: string }) => {
+          console.log(`🔍 [BACKEND] finalizarCandidato llamado con aplicacionId: ${args.aplicacionId}, usuarioId: ${args.usuarioId} - Timestamp: ${new Date().toISOString()}`)
+          console.trace('📍 [BACKEND] Stack trace de llamada a finalizarCandidato')
+          
+          return await ErrorHandler.handleError(
+            async () => {
+              const resultado = await this.aplicacionService.finalizarCandidato(args.aplicacionId, args.usuarioId);
+              return {
+                success: true,
+                aplicacion: resultado.aplicacion,
+                candidato: resultado.candidato,
+                convocatoria: resultado.convocatoria,
+                personalId: resultado.personalId
+              };
+            },
+            'finalizarCandidato',
+            args
+          );
         }
       }
     };

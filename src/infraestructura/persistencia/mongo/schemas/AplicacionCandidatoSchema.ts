@@ -40,6 +40,10 @@ export interface AplicacionCandidatoDocument extends Document {
   esRepostulacion: boolean;
   esPosibleCandidatoActivado: boolean;
   aplicacionPrincipalRechazadaId?: mongoose.Types.ObjectId;
+
+  // Estado del proceso de finalización
+  procesoFinalizadoCompleto?: boolean;
+  fechaFinalizacionProceso?: Date;
 }
 
 const AplicacionCandidatoSchema = new Schema<AplicacionCandidatoDocument>({
@@ -98,7 +102,11 @@ const AplicacionCandidatoSchema = new Schema<AplicacionCandidatoDocument>({
   // Tracking de reactivaciones
   esRepostulacion: { type: Boolean, required: true, default: false },
   esPosibleCandidatoActivado: { type: Boolean, required: true, default: false },
-  aplicacionPrincipalRechazadaId: { type: Schema.Types.ObjectId, ref: 'AplicacionCandidato' }
+  aplicacionPrincipalRechazadaId: { type: Schema.Types.ObjectId, ref: 'AplicacionCandidato' },
+
+  // Estado del proceso de finalización
+  procesoFinalizadoCompleto: { type: Boolean, default: false },
+  fechaFinalizacionProceso: { type: Date }
 }, {
   collection: 'aplicacion_candidato',
   timestamps: true

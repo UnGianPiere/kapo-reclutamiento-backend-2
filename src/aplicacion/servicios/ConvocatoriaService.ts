@@ -27,4 +27,8 @@ export class ConvocatoriaService {
   async obtenerConvocatoria(id: string): Promise<Convocatoria | null> {
     return this.getById(id);
   }
+
+  async actualizar(id: string, datos: Partial<Convocatoria>): Promise<Convocatoria> {
+    return this.convocatoriaRepository.actualizar(id, datos);
+  }
 }

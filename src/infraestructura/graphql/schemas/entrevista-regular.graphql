@@ -7,6 +7,7 @@ type EntrevistaRegular {
   aplicacionCandidatoId: ID!
   candidatoId: ID!
   tipo_entrevista: TipoEntrevista!
+  modalidad: ModalidadEntrevista
   fecha_entrevista: DateTime!
   hora_entrevista: String!
   correo_contacto: String!
@@ -24,11 +25,17 @@ enum TipoEntrevista {
   SEGUNDA
 }
 
+enum ModalidadEntrevista {
+  PRESENCIAL
+  VIRTUAL
+}
+
 # Inputs para operaciones
 input CrearEntrevistaRegularInput {
   aplicacionCandidatoId: ID!
   candidatoId: ID!
   tipo_entrevista: TipoEntrevista!
+  modalidad: ModalidadEntrevista!
   fecha_entrevista: DateTime!
   hora_entrevista: String!
   correo_contacto: String!
@@ -39,6 +46,7 @@ input CrearEntrevistaRegularInput {
 }
 
 input ActualizarEntrevistaRegularInput {
+  modalidad: ModalidadEntrevista
   fecha_entrevista: DateTime
   hora_entrevista: String
   correo_contacto: String

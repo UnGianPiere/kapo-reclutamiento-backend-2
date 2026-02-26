@@ -45,6 +45,10 @@ export interface AplicacionCandidato {
   fechaActualizacion?: Date;
   tiempoEnEstadoDias?: number;
 
+  /** Estado del proceso de finalización */
+  procesoFinalizadoCompleto?: boolean; // Campo específico para saber si concluyó todo el proceso
+  fechaFinalizacionProceso?: Date; // Fecha exacta cuando se completó el proceso
+
   /** Campos desnormalizados para performance (lookup) */
   candidato_nombres?: string;
   candidato_apellidos?: string;
@@ -68,7 +72,6 @@ export interface CrearAplicacionInput {
 }
 
 export interface ActualizarAplicacionInput {
-  puestoPostula?: string;
   aniosExperienciaPuesto?: number;
   aniosExperienciaGeneral?: number;
   medioConvocatoria?: string;
@@ -86,4 +89,6 @@ export interface ActualizarAplicacionInput {
   esPosibleCandidatoActivado?: boolean;
   aplicacionPrincipalRechazadaId?: string;
   convocatoriaId?: string;
+  procesoFinalizadoCompleto?: boolean;
+  fechaFinalizacionProceso?: Date;
 }

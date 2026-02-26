@@ -53,7 +53,11 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       aplicacionPrincipalRechazadaId: doc.aplicacionPrincipalRechazadaId,
 
       fechaActualizacion: doc.fechaActualizacion || doc.fechaAplicacion,
-      tiempoEnEstadoDias: doc.tiempoEnEstadoDias || 0
+      tiempoEnEstadoDias: doc.tiempoEnEstadoDias || 0,
+      
+      // Campos de finalización del proceso
+      procesoFinalizadoCompleto: doc.procesoFinalizadoCompleto,
+      fechaFinalizacionProceso: doc.fechaFinalizacionProceso
     };
     return domainEntity;
   }
@@ -94,7 +98,11 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       aplicacionPrincipalRechazadaId: doc.aplicacionPrincipalRechazadaId,
 
       fechaActualizacion: doc.fechaActualizacion || doc.fechaAplicacion,
-      tiempoEnEstadoDias: doc.tiempoEnEstadoDias || 0
+      tiempoEnEstadoDias: doc.tiempoEnEstadoDias || 0,
+      
+      // Campos de finalización del proceso
+      procesoFinalizadoCompleto: doc.procesoFinalizadoCompleto,
+      fechaFinalizacionProceso: doc.fechaFinalizacionProceso
     };
   }
 
@@ -135,14 +143,14 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
    * Obtener aplicación por ID
    */
   async obtenerPorId(id: string): Promise<AplicacionCandidato | null> {
-    return await this.findById(id);
+    return this.findById(id);
   }
 
   /**
    * Obtener aplicaciones por candidato
    */
   async obtenerPorCandidato(candidatoId: string): Promise<AplicacionCandidato[]> {
-    const docs = await AplicacionCandidatoModel.find({ candidatoId }).sort({ fechaAplicacion: -1 });
+    const docs = await AplicacionCandidatoModel.find({ candidatoId: new mongoose.Types.ObjectId(candidatoId) }).sort({ fechaAplicacion: -1 });
     return docs.map(doc => this.toDomain(doc));
   }
 
@@ -165,7 +173,7 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
   /**
    * Actualizar aplicación
    */
-  async actualizar(id: string, input: ActualizarAplicacionInput): Promise<AplicacionCandidato> {
+  async actualizar(id: string, input: ActualizarAplicacionInput, session?: mongoose.ClientSession): Promise<AplicacionCandidato> {
     const updateData: any = {};
 
     if (input.aniosExperienciaPuesto !== undefined) updateData.aniosExperienciaPuesto = input.aniosExperienciaPuesto;
@@ -185,11 +193,27 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
     if (input.esPosibleCandidatoActivado !== undefined) updateData.esPosibleCandidatoActivado = input.esPosibleCandidatoActivado;
     if (input.aplicacionPrincipalRechazadaId !== undefined) updateData.aplicacionPrincipalRechazadaId = input.aplicacionPrincipalRechazadaId;
     if (input.convocatoriaId !== undefined) updateData.convocatoriaId = new mongoose.Types.ObjectId(input.convocatoriaId);
+    if (input.procesoFinalizadoCompleto !== undefined) updateData.procesoFinalizadoCompleto = input.procesoFinalizadoCompleto;
+    if (input.fechaFinalizacionProceso !== undefined) updateData.fechaFinalizacionProceso = input.fechaFinalizacionProceso;
 
-    const aplicacion = await this.update(id, updateData);
+    console.log(`[APLICACION_REPO] Actualizando aplicación ID: ${id}`, {
+      camposActualizados: Object.keys(updateData),
+      valores: updateData,
+      conSesion: !!session
+    });
+
+    const aplicacion = await this.update(id, updateData, session);
     if (!aplicacion) {
       throw new Error(`Aplicación con ID ${id} no encontrada`);
     }
+    
+    console.log(`[APLICACION_REPO] Aplicación actualizada exitosamente:`, {
+      id: aplicacion.id,
+      estadoKanban: aplicacion.estadoKanban,
+      procesoFinalizadoCompleto: aplicacion.procesoFinalizadoCompleto,
+      fechaFinalizacionProceso: aplicacion.fechaFinalizacionProceso
+    });
+    
     return aplicacion;
   }
 
@@ -249,6 +273,27 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
     // Pipeline de agregación para ordenamiento inteligente por convocatoria
     const pipeline = [
       { $match: query },
+      // JOIN con Convocatoria para filtrar por estado activo
+      {
+        $lookup: {
+          from: 'convocatorias',
+          localField: 'convocatoriaId',
+          foreignField: '_id',
+          as: 'convocatoria'
+        }
+      },
+      // Filtrar solo convocatorias activas o en proceso
+      {
+        $match: {
+          'convocatoria.estado_convocatoria': { $in: ['ACTIVA', 'EN_PROCESO'] }
+        }
+      },
+      // Remover el campo convocatoria agregado
+      {
+        $project: {
+          convocatoria: 0
+        }
+      },
       // Agregar campo numérico de convocatoria para ordenamiento
       {
         $addFields: {
@@ -262,10 +307,7 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
           }
         }
       },
-      // Ordenamiento inteligente:
-      // 1. Aplicaciones más recientes primero (por fecha de aplicación)
-      // 2. Desempate por fecha de actualización
-      // 3. Desempate final por ID
+
       {
         $sort: {
           "updatedAt": -1 as 1 | -1,          // Desempate por actualización
@@ -277,11 +319,36 @@ export class AplicacionCandidatoMongoRepository extends BaseMongoRepository<Apli
       // SIN lookup - GraphQL resuelve las relaciones por separado
     ];
 
+    // Pipeline de conteo con mismo filtro de convocatorias activas
+    const countPipeline = [
+      { $match: query },
+      // JOIN con Convocatoria para filtrar por estado activo
+      {
+        $lookup: {
+          from: 'convocatorias',
+          localField: 'convocatoriaId',
+          foreignField: '_id',
+          as: 'convocatoria'
+        }
+      },
+      // Filtrar solo convocatorias activas o en proceso
+      {
+        $match: {
+          'convocatoria.estado_convocatoria': { $in: ['ACTIVA', 'EN_PROCESO'] }
+        }
+      },
+      // Contar documentos filtrados
+      { $count: "total" }
+    ];
+
     // Ejecutar consulta y conteo en paralelo
-    const [docs, total] = await Promise.all([
+    const [docs, countResult] = await Promise.all([
       AplicacionCandidatoModel.aggregate(pipeline),
-      AplicacionCandidatoModel.countDocuments(query)
+      AplicacionCandidatoModel.aggregate(countPipeline)
     ]);
+
+    // Extraer total del resultado de conteo
+    const total = countResult.length > 0 ? countResult[0].total : 0;
 
     // Convertir documentos agregados a entidades de dominio
     const aplicaciones = docs.map(doc => this.toDomainFromAggregate(doc));
