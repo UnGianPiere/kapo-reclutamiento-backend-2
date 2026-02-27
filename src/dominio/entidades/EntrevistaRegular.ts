@@ -33,6 +33,9 @@ export interface EntrevistaRegular {
   /** Observaciones adicionales */
   observaciones?: string;
 
+  /** Archivos de sustento */
+  archivo_sustento?: string[];
+
   /** Resultado de la entrevista */
   resultado?: string;
 
@@ -56,6 +59,7 @@ export interface CrearEntrevistaRegularInput {
   entrevistador_id: string;
   entrevistador_nombre: string;
   observaciones?: string;
+  archivo_sustento?: string[];
   resultado?: string;
 }
 
@@ -67,5 +71,6 @@ export interface ActualizarEntrevistaRegularInput {
   entrevistador_id?: string;
   entrevistador_nombre?: string;
   observaciones?: string;
+  archivo_sustento?: string[];
   resultado?: string;
 }

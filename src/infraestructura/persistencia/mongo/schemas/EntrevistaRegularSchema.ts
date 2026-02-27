@@ -12,6 +12,7 @@ export interface EntrevistaRegularDocument extends Document {
   entrevistador_id: mongoose.Types.ObjectId;
   entrevistador_nombre: string;
   observaciones?: string;
+  archivo_sustento?: string[];
   resultado?: string;
   created_at: Date;
   updated_at: Date;
@@ -78,6 +79,12 @@ const EntrevistaRegularSchema = new Schema<EntrevistaRegularDocument>({
     required: false,
     trim: true,
     default: ''
+  },
+
+  archivo_sustento: {
+    type: [String],
+    required: false,
+    default: []
   },
 
   resultado: {

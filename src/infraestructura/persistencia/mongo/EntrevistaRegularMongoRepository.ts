@@ -29,6 +29,7 @@ export class EntrevistaRegularMongoRepository implements IEntrevistaRegularRepos
       entrevistador_nombre: savedDoc.entrevistador_nombre,
       ...(savedDoc.observaciones !== undefined ? { observaciones: savedDoc.observaciones } : {}),
       ...(savedDoc.resultado !== undefined ? { resultado: savedDoc.resultado } : {}),
+      ...(savedDoc.archivo_sustento !== undefined ? { archivo_sustento: savedDoc.archivo_sustento } : {}),
       created_at: savedDoc.created_at,
       updated_at: savedDoc.updated_at
     };
@@ -51,6 +52,7 @@ export class EntrevistaRegularMongoRepository implements IEntrevistaRegularRepos
       entrevistador_nombre: documento.entrevistador_nombre,
       ...(documento.observaciones !== undefined ? { observaciones: documento.observaciones } : {}),
       ...(documento.resultado !== undefined ? { resultado: documento.resultado } : {}),
+      ...(documento.archivo_sustento !== undefined ? { archivo_sustento: documento.archivo_sustento } : {}),
       created_at: documento.created_at,
       updated_at: documento.updated_at
     };
@@ -77,6 +79,7 @@ export class EntrevistaRegularMongoRepository implements IEntrevistaRegularRepos
       entrevistador_nombre: documento.entrevistador_nombre,
       ...(documento.observaciones !== undefined ? { observaciones: documento.observaciones } : {}),
       ...(documento.resultado !== undefined ? { resultado: documento.resultado } : {}),
+      ...(documento.archivo_sustento !== undefined ? { archivo_sustento: documento.archivo_sustento } : {}),
       created_at: documento.created_at,
       updated_at: documento.updated_at
     };
@@ -104,6 +107,7 @@ export class EntrevistaRegularMongoRepository implements IEntrevistaRegularRepos
       entrevistador_nombre: documento.entrevistador_nombre,
       ...(documento.observaciones !== undefined ? { observaciones: documento.observaciones } : {}),
       ...(documento.resultado !== undefined ? { resultado: documento.resultado } : {}),
+      ...(documento.archivo_sustento !== undefined ? { archivo_sustento: documento.archivo_sustento } : {}),
       created_at: documento.created_at,
       updated_at: documento.updated_at
     };
@@ -156,6 +160,7 @@ export class EntrevistaRegularMongoRepository implements IEntrevistaRegularRepos
       entrevistador_nombre: documento.entrevistador_nombre,
       ...(documento.observaciones !== undefined ? { observaciones: documento.observaciones } : {}),
       ...(documento.resultado !== undefined ? { resultado: documento.resultado } : {}),
+      ...(documento.archivo_sustento !== undefined ? { archivo_sustento: documento.archivo_sustento } : {}),
       created_at: documento.created_at,
       updated_at: documento.updated_at
     }));
